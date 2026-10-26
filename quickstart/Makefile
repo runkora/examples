@@ -295,10 +295,11 @@ tunnel: tunnel-stop
 	[ -n "$$url" ] || { echo "The tunnel did not start. See $(TUNNEL_DIR)/cloudflared.log."; exit 1; }; \
 	echo "$$url" > $(TUNNEL_DIR)/url; \
 	echo; echo "Tunnel: $$url"; echo; \
-	$(KUBECTL) get triggersources -A -o jsonpath='{range .items[*]}{.metadata.namespace} {.metadata.name} {.spec.provider} {.status.webhookPath} {.spec.signingSecretRef.name} {.spec.signingSecretRef.key}{"\n"}{end}' | \
-	while read ns name provider path secret key; do \
+	$(KUBECTL) get triggersources -A -o jsonpath='{range .items[*]}{.metadata.namespace}|{.metadata.name}|{.spec.provider}|{.status.webhookPath}|{.spec.signingSecretRef.name}|{.spec.signingSecretRef.key}{"\n"}{end}' | \
+	while IFS='|' read -r ns name provider webhook_path secret key; do \
 		echo "$$ns/$$name ($$provider)"; \
-		echo "  URL:     $$url$$path"; \
+		if [ -z "$$webhook_path" ]; then echo "  Not ready: the source has no webhook path yet. Run make tunnel again once it is Ready."; continue; fi; \
+		echo "  URL:     $$url$$webhook_path"; \
 		echo "  Secret:  kubectl --context $(CONTEXT) -n $$ns get secret $$secret -o jsonpath='{.data.$$key}' | base64 -d"; \
 	done; \
 	echo; echo "Stop it with make tunnel-stop."
