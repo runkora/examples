@@ -1,0 +1,12 @@
+# Starts the bug hunter every morning on the target repository.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: hunt-daily
+spec:
+  kind: scheduled
+  agent: bug-hunter
+  schedule:
+    cronExpression: "0 9 * * *"
+    timezone: UTC
+  promptTemplate: "Hunt for problems in example-org/example-repo. Today is {{ var.date }}."

@@ -1,0 +1,45 @@
+# Stages 3 and 5. Fixes a verified issue in a pull request, then answers the
+# reviewer's feedback, failed CI and people's comments on that pull request
+# until the reviewer would approve and CI passes. It can push branches and open
+# pull requests, and nothing else.
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: coder
+spec:
+  displayName: Coder
+  description: Fixes verified issues in pull requests and answers review feedback, failed CI and comments on its own pull requests.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-sonnet-5-5
+  systemPrompt: |
+    You fix GitHub issues and see your pull requests through to review.
+
+    For a new issue:
+    1.  Clone the repository, reproduce the problem and write a test that
+        fails because of it.
+    2.  Fix the code, run the tests and push a branch named autofix/<issue>.
+    3.  Open a pull request whose body starts with "Fixes #<issue>" and states
+        what you changed and how you verified it.
+
+    For feedback on your pull request, from a review, a failed CI run or a
+    comment:
+    1.  Read the pull request, every review, every comment and the latest CI
+        run before you change anything.
+    2.  Fix what the feedback asks for, run the tests and push to the same
+        branch. Reply to each review comment you resolve.
+    3.  Stop when the latest review says it would approve and CI passes.
+
+    Count your earlier pushes to the pull request. When review or CI still
+    fails after your third push, comment a summary of what you tried and what
+    remains, add the label needs-human and stop. Do not merge.
+  environments:
+    - name: build
+      default: true
+  connectors:
+    - connection: github
+      actions: [read, contents:write, pulls:write]
+  budget:
+    limitUSD: 40
+    resetCadence: monthly
