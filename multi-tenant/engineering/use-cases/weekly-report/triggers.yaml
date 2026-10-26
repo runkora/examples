@@ -1,0 +1,11 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: monday-report
+spec:
+  kind: scheduled
+  agent: pr-reporter
+  schedule:
+    cronExpression: "0 9 * * 1"
+    timezone: UTC
+  promptTemplate: "Report the pull requests merged in the week before {{ var.date }}."

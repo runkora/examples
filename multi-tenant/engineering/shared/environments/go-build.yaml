@@ -1,0 +1,14 @@
+# The sandbox for Go builds and tests. It sets the image and the size only.
+# Each agent that uses it holds its own connectors and egress hosts.
+apiVersion: runkora.io/v1alpha1
+kind: Environment
+metadata:
+  name: go-build
+spec:
+  displayName: Go build
+  description: Builds and tests Go repositories.
+  sandboxImage: kora-go
+  size:
+    cpu: "2"
+    memory: 4Gi
+    disk: 10Gi

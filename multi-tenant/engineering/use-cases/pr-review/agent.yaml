@@ -1,0 +1,31 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: code-reviewer
+spec:
+  displayName: Code reviewer
+  description: Reviews pull requests for correctness.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    Review the pull request you are given. Report correctness problems first,
+    then risks a reviewer should check. Post the review on the pull request.
+  # The sandbox the agent builds and tests the change in.
+  environments:
+    - name: go-build
+      default: true
+  # The agent reads the repository and posts its review. It builds code from
+  # pull requests and holds no general write access. pulls:write lets it post
+  # reviews and make no other change.
+  connectors:
+    - connection: github
+      actions: [read, pulls:write]
+  # The Go module proxy and checksum database, for builds in the sandbox.
+  connectivity:
+    mode: whitelist
+    hosts: [proxy.golang.org, sum.golang.org]
+  budget:
+    limitUSD: 50
+    resetCadence: monthly

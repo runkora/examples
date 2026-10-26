@@ -1,0 +1,21 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: pr-reporter
+spec:
+  displayName: PR reporter
+  description: Summarises the pull requests merged each week.
+  identityMode: autonomous
+  # A low-cost model for a bulk summary.
+  model:
+    family: deepseek
+    name: deepseek-v4-1-flash
+  systemPrompt: |
+    List the pull requests merged in the organisation in the week you are
+    given, grouped by repository, with one line on what each changed.
+  connectors:
+    - connection: github
+      actions: [read]
+  budget:
+    limitUSD: 20
+    resetCadence: monthly
