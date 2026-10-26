@@ -1,5 +1,3 @@
-# Starts the bug verifier on every new issue in the target repository, filed by
-# the bug hunter or by a person.
 apiVersion: runkora.io/v1alpha1
 kind: Trigger
 metadata:

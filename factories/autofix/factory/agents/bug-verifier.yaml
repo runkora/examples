@@ -1,7 +1,3 @@
-# Stage 2. Checks each new issue, from the bug hunter or from a person, and
-# labels the outcome. The verified label starts the coder. It can read code and
-# write issues, and nothing else. Issue text can come from anyone. The verifier
-# holds no write access to code.
 apiVersion: runkora.io/v1alpha1
 kind: Agent
 metadata:

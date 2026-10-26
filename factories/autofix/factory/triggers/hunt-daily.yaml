@@ -1,4 +1,3 @@
-# Starts the bug hunter every morning on the target repository.
 apiVersion: runkora.io/v1alpha1
 kind: Trigger
 metadata:

@@ -1,11 +1,5 @@
-# The factory's GitHub access through a GitHub App installation. The egress gateway
-# adds the App's credential to each agent's GitHub requests. The agents never
-# hold the key, and each agent's connector grants only the actions its stage
-# needs.
-#
-# Create a GitHub App with read and write access to contents, issues and pull
-# requests, install it on your organisation, and store its private key under
-# the remote key below. Set the config values from the App's settings. See
+# The factory's GitHub App installation. Store the App's private key under the
+# remote key below and set the config values from the App's settings. See
 # https://github.com/runkora/kora/blob/main/docs/guides/register-connection.md.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret

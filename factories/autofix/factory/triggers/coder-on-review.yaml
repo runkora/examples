@@ -1,9 +1,5 @@
-# Sends the code reviewer's review back to the coder. The reviewer posts as the
-# same GitHub App that opened the pull request. Its reviews arrive with the
-# state commented.
-#
-# The coder is the only candidate. kora joins the event to the coder's open run
-# for this pull request when there is one, and otherwise starts a new run.
+# The reviewer posts as the same GitHub App that opened the pull request. Its
+# reviews arrive with the state commented.
 apiVersion: runkora.io/v1alpha1
 kind: Trigger
 metadata:

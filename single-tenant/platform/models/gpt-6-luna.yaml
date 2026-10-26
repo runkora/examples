@@ -1,6 +1,5 @@
-# openai/gpt-6-luna is a low-cost model for short decisions, such as a routed
-# trigger picking an agent. It routes to the OpenRouter provider in
-# quickstart/providers.
+# openai/gpt-6-luna is a low-cost chat model. It routes to the OpenRouter
+# provider in quickstart/providers.
 apiVersion: runkora.io/v1alpha1
 kind: VirtualModel
 metadata:

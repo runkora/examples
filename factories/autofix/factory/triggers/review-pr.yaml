@@ -1,6 +1,3 @@
-# Starts the code reviewer when the coder opens a pull request or pushes to
-# one. The coder opens pull requests as the factory's GitHub App, whose user is
-# <app-slug>[bot]. Pushes within two minutes start one review.
 apiVersion: runkora.io/v1alpha1
 kind: Trigger
 metadata:

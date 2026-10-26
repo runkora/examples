@@ -1,7 +1,5 @@
-# Sends a person's comment on the coder's pull request back to the coder. Only
-# owners, members and collaborators can steer the factory. The factory's own
-# comments do not match. The contains filter limits the trigger to pull
-# requests: the bug hunter's issues also have the factory as their author.
+# The contains filter limits the trigger to pull requests. The bug hunter's
+# issues also have the factory as their author.
 apiVersion: runkora.io/v1alpha1
 kind: Trigger
 metadata:

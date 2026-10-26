@@ -1,5 +1,3 @@
-# Sends a failed CI run on the coder's branch back to the coder. Failures on
-# one commit within five minutes start one run.
 apiVersion: runkora.io/v1alpha1
 kind: Trigger
 metadata:

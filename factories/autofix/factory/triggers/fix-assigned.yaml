@@ -1,6 +1,5 @@
-# Gate B: a person decides. The coder starts when someone assigns a verified
-# issue to the factory's GitHub user. This is the human in the loop: the
-# verifier labels issues, and a person picks which ones the factory fixes.
+# Gate B. The coder starts when a person assigns a verified issue to the
+# factory's GitHub user.
 #
 # GitHub Apps cannot be assigned issues. Create a GitHub user for the factory,
 # such as example-autofix-agent, and give it access to the repository.

@@ -1,7 +1,3 @@
-# Stages 3 and 5. Fixes a verified issue in a pull request, then answers the
-# reviewer's feedback, failed CI and people's comments on that pull request
-# until the reviewer would approve and CI passes. It can push branches and open
-# pull requests, and nothing else.
 apiVersion: runkora.io/v1alpha1
 kind: Agent
 metadata:

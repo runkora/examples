@@ -1,6 +1,3 @@
-# Stage 4. Reviews each pull request the coder opens or updates. It can read
-# code and post reviews, and nothing else. It runs on a different model from
-# the coder.
 apiVersion: runkora.io/v1alpha1
 kind: Agent
 metadata:
