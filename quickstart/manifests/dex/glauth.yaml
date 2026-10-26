@@ -3,16 +3,18 @@
 # built-in password database has no groups. Dex reads its users from glauth.
 #
 # kora routes a person to a tenant by the domain of their email. Each example
-# in ../single-tenant and ../multi-tenant declares the tenants these domains
-# belong to.
+# in ../single-tenant, ../multi-tenant and ../factories declares the tenants
+# these domains belong to.
 #
 # Every user has the password "password" (passsha256 is its SHA-256).
-#   admin@local.runkora.io               single-tenant   platform-admin, engineer
-#   engineer@local.runkora.io            single-tenant   engineer, kora-viewer
-#   admin@engineering.local.runkora.io   multi-tenant    platform-admin
-#   dev@engineering.local.runkora.io     multi-tenant    reviewer, kora-viewer
-#   admin@sre.local.runkora.io           multi-tenant    platform-admin
-#   oncall@sre.local.runkora.io          multi-tenant    sre, kora-viewer
+#   admin@local.runkora.io                 single-tenant   platform-admin, engineer
+#   engineer@local.runkora.io              single-tenant   engineer, kora-viewer
+#   admin@engineering.local.runkora.io     multi-tenant    platform-admin
+#   dev@engineering.local.runkora.io       multi-tenant    reviewer, kora-viewer
+#   admin@sre.local.runkora.io             multi-tenant    platform-admin
+#   oncall@sre.local.runkora.io            multi-tenant    sre, kora-viewer
+#   admin@autofix.local.runkora.io         autofix         platform-admin
+#   maintainer@autofix.local.runkora.io    autofix         maintainer
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -100,6 +102,26 @@ data:
       othergroups = [5005, 5002]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
+    [[users]]
+      name = "autofix-admin"
+      givenname = "Admin"
+      sn = "User"
+      mail = "admin@autofix.local.runkora.io"
+      uidnumber = 1007
+      primarygroup = 1100
+      othergroups = [5001]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "autofix-maintainer"
+      givenname = "Maintainer"
+      sn = "User"
+      mail = "maintainer@autofix.local.runkora.io"
+      uidnumber = 1008
+      primarygroup = 1100
+      othergroups = [5006]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
     [[groups]]
       name = "svcaccts"
       gidnumber = 5000
@@ -127,6 +149,9 @@ data:
     [[groups]]
       name = "sre"
       gidnumber = 5005
+    [[groups]]
+      name = "maintainer"
+      gidnumber = 5006
 ---
 apiVersion: v1
 kind: Service

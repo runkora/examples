@@ -18,6 +18,7 @@ An example is a set of Kubernetes manifests that declare tenants, models, agents
 
 *   [`single-tenant`](single-tenant): One tenant with an agent that summarises pull requests.
 *   [`multi-tenant`](multi-tenant): An engineering team and an SRE team, each in a separate tenant and repository.
+*   [`factories/autofix`](factories/autofix): A factory of four agents that finds, verifies and fixes problems in a GitHub repository and hands a person the pull request.
 
 Each example splits its manifests by owner:
 
