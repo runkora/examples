@@ -1,0 +1,33 @@
+# Two ways to start a run of the agent.
+#
+# summarise-on-pr fires when GitHub delivers a pull_request event for a new pull
+# request. GitHub must reach the webhook URL. A cluster on your laptop does not
+# expose it.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: summarise-on-pr
+spec:
+  source: github
+  eventType: pull_request
+  match:
+    action: [opened]
+  agent: pr-summariser
+  promptTemplate: "Summarise {{ pull_request.html_url }}"
+---
+# summarise-pr runs from a form in the console. It works on a local cluster.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: summarise-pr
+spec:
+  kind: manual
+  agent: pr-summariser
+  manual:
+    inputs:
+      - name: pr_url
+        type: text
+        label: Pull request URL
+        description: A public pull request, such as https://github.com/runkora/kora/pull/1.
+        required: true
+  promptTemplate: "Summarise {{ var.pr_url }}"

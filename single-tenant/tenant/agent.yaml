@@ -1,0 +1,33 @@
+# The agent's slug is metadata.name. Its run scopes use the slug, such as
+# agents:runs:pr-summariser:write in role.yaml.
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: pr-summariser
+spec:
+  displayName: PR summariser
+  description: Summarises what a pull request changes and why.
+  # An autonomous agent acts as itself. Triggers start autonomous agents only.
+  identityMode: autonomous
+  # The model comes from ../platform/models. To compare models, set another one
+  # from there, such as deepseek/deepseek-v4-1-flash. With Ollama set up, set
+  # openai/gpt-oss-20b.
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    You summarise GitHub pull requests. Read the pull request you are given,
+    including its description and diff. Report what it changes, why, and
+    anything a reviewer should check first. Keep the summary under 200 words.
+  # The sandbox the agent runs its commands in.
+  environments:
+    - name: pr-tools
+      default: true
+  # The agent's own egress. It can reach GitHub to read public pull requests.
+  connectivity:
+    mode: whitelist
+    hosts: [github.com, api.github.com, codeload.github.com]
+  budget:
+    limitUSD: 10
+    resetCadence: monthly
+    perRunLimitUSD: 0.5

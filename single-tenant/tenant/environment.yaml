@@ -1,0 +1,15 @@
+# The sandbox the agent runs its commands in. An environment sets the sandbox
+# image and the size. kora registers the bundled kora-python image in every
+# tenant. The agent holds its own egress in agent.yaml.
+apiVersion: runkora.io/v1alpha1
+kind: Environment
+metadata:
+  name: pr-tools
+spec:
+  displayName: PR tools
+  description: Reads and inspects pull requests with Python and the command-line tools.
+  sandboxImage: kora-python
+  size:
+    cpu: "1"
+    memory: 2Gi
+    disk: 5Gi

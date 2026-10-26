@@ -1,0 +1,28 @@
+# The example tenant. The operator creates its namespace, kora-tenant-example,
+# where ../tenant applies its agent, triggers and role.
+#
+# The oidc block points at the quickstart's Dex. On your own cluster, replace
+# it with the client your identity provider gives you. See
+# https://github.com/runkora/kora/blob/main/docs/guides/tenants.md.
+apiVersion: runkora.io/v1alpha1
+kind: KoraTenant
+metadata:
+  name: example
+spec:
+  displayName: Example
+  active: true
+  oidc:
+    issuerURL: https://dex.local.runkora.io:5557/dex
+    clientID: kora-quickstart
+    scopes: [openid, profile, email, groups]
+    # The console routes a person to this tenant by the domain of their email.
+    emailDomains:
+      - local.runkora.io
+  # Enabled lets people build agents in the console next to the declared ones.
+  # Set Disabled to make ../tenant the only way to change the tenant's agents,
+  # environments, trigger sources, triggers and roles.
+  apiAuthoring: Enabled
+  # The tenant's spending limit across every agent and person.
+  budget:
+    limitUSD: 100
+    resetCadence: monthly
