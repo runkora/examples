@@ -1,0 +1,22 @@
+# The engineer role. People whose groups claim includes engineer can see the
+# agent and the tenant's triggers, start and read the agent's runs and fire
+# summarise-pr. Each person gets the monthly budget below.
+#
+# The console's Triggers page needs triggers:read. trigger:fire covers every
+# manual trigger in the tenant. A role cannot reference one trigger: its id
+# exists only once kora creates it.
+apiVersion: runkora.io/v1alpha1
+kind: PolicyRole
+metadata:
+  name: engineer
+spec:
+  role: engineer
+  scopes:
+    - agents:types:pr-summariser:read
+    - agents:runs:pr-summariser:read
+    - agents:runs:pr-summariser:write
+    - triggers:read
+    - trigger:fire
+  budget:
+    limitUSD: 5
+    resetCadence: monthly

@@ -1,0 +1,37 @@
+# The GitHub webhook endpoint. kora checks each delivery's signature against the
+# signing secret. External Secrets Operator copies the secret into the tenant
+# namespace from example-secret-store. The label lets kora read the Secret.
+#
+# After you apply it, set the webhook URL in GitHub to the API host plus the
+# path in status.webhookPath:
+#   kubectl get triggersources -n kora-tenant-example -o wide
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-webhook
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: example-secret-store
+  target:
+    name: github-webhook
+    template:
+      metadata:
+        labels:
+          runkora.io/trigger-source: "true"
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: example-github-webhook
+        property: secret
+---
+apiVersion: runkora.io/v1alpha1
+kind: TriggerSource
+metadata:
+  name: github
+spec:
+  provider: github
+  signingSecretRef:
+    name: github-webhook
+    key: secret

@@ -1,0 +1,17 @@
+# The platform team's repository for the single-tenant example: the tenant
+# and the models its agents run on. Point your GitOps tool at this folder, or
+# apply it with kubectl apply -k.
+#
+# These resources span kora-system and the cluster scope. This file sets no
+# namespace.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  # The console shows this value as "Managed by" on each declared item.
+  runkora.io/repository: github.com/runkora/examples
+resources:
+  - tenants/example.yaml
+  - models/claude-haiku-5-5.yaml
+  - models/deepseek-v4-1-flash.yaml
+  - models/gpt-6-luna.yaml
+  - models/gpt-oss-20b.yaml

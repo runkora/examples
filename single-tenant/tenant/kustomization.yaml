@@ -1,0 +1,17 @@
+# A tenant repository with one use case: an agent that summarises pull
+# requests. Point your GitOps tool at this folder, or apply it with
+# kubectl apply -k.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# The tenant's namespace. The resource files leave namespace out. Another
+# kustomization can apply the same files to another tenant.
+namespace: kora-tenant-example
+commonAnnotations:
+  # The console shows this value as "Managed by" on each declared item.
+  runkora.io/repository: github.com/runkora/examples
+resources:
+  - environment.yaml
+  - agent.yaml
+  - trigger-source.yaml
+  - triggers.yaml
+  - role.yaml

@@ -1,0 +1,24 @@
+# The default model for the example agents, served as
+# anthropic/claude-haiku-5-5. A VirtualModel lives in kora-system and every
+# tenant can use it. An agent references it in its model field by family and
+# name. A family and a name allow a-z, 0-9, _ and -.
+#
+# Each route references an InferenceProvider as <type>:<name>. This route
+# expects the OpenRouter provider in quickstart/providers. On your own cluster,
+# point the route at a provider you registered, such as bedrock:<name> with a
+# Bedrock model id.
+apiVersion: runkora.io/v1alpha1
+kind: VirtualModel
+metadata:
+  name: anthropic-claude-haiku-5-5
+  namespace: kora-system
+spec:
+  family: anthropic
+  name: claude-haiku-5-5
+  displayName: Claude Haiku 5.5
+  description: Claude Haiku 5.5 through OpenRouter.
+  strategy: priority
+  routes:
+    - provider: compatible:openrouter
+      modelID: anthropic/claude-haiku-5.5
+      priority: 1
