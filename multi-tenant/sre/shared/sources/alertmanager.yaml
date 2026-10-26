@@ -1,0 +1,33 @@
+# Alertmanager's webhook receiver. It posts alert.firing and alert.resolved
+# events.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: alertmanager-webhook
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: example-secret-store
+  target:
+    name: alertmanager-webhook
+    template:
+      metadata:
+        labels:
+          # kora reads only Secrets that carry this label.
+          runkora.io/trigger-source: "true"
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: sre-alertmanager-webhook
+        property: secret
+---
+apiVersion: runkora.io/v1alpha1
+kind: TriggerSource
+metadata:
+  name: alertmanager
+spec:
+  provider: alertmanager
+  signingSecretRef:
+    name: alertmanager-webhook
+    key: secret

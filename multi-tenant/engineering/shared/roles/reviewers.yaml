@@ -1,0 +1,15 @@
+# Lets people whose groups claim includes reviewer see the code reviewer and
+# the PR reporter, read and start the code reviewer's runs, and read the
+# weekly reports.
+apiVersion: runkora.io/v1alpha1
+kind: PolicyRole
+metadata:
+  name: reviewers
+spec:
+  role: reviewer
+  scopes:
+    - agents:types:code-reviewer:read
+    - agents:types:pr-reporter:read
+    - agents:runs:code-reviewer:read
+    - agents:runs:code-reviewer:write
+    - agents:runs:pr-reporter:read

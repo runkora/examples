@@ -1,0 +1,13 @@
+# The SRE team's repository: an agent that triages firing alerts with web
+# search. Point your GitOps tool at this folder, or apply it with
+# kubectl apply -k.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# The team's tenant namespace. The resource files leave namespace out.
+namespace: kora-tenant-sre
+commonAnnotations:
+  # The console shows this value as "Managed by" on each declared item.
+  runkora.io/repository: github.com/runkora/examples
+resources:
+  - shared
+  - use-cases/incident-triage

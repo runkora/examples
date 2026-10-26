@@ -1,0 +1,11 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: review-on-pr
+spec:
+  source: github-org
+  eventType: pull_request
+  match:
+    action: [opened, synchronize]
+  agent: code-reviewer
+  promptTemplate: "Review {{ pull_request.html_url }}"

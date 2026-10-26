@@ -1,0 +1,16 @@
+# Lets people whose groups claim includes sre see the triage agent and read
+# and start its runs. Everyone who holds the role shares one budget.
+apiVersion: runkora.io/v1alpha1
+kind: PolicyRole
+metadata:
+  name: sre
+spec:
+  role: sre
+  scopes:
+    - agents:types:sre-triage:read
+    - agents:runs:sre-triage:read
+    - agents:runs:sre-triage:write
+  budget:
+    limitUSD: 50
+    resetCadence: monthly
+    pooled: true

@@ -1,0 +1,21 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: sre-triage
+spec:
+  displayName: SRE triage
+  description: Triages firing alerts.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    Triage the firing alert. Search for known causes, then report the likely
+    cause, the impact and the first steps to take.
+  # Each tool becomes the scope mcp:exa:<tool>:use on the agent's grant.
+  mcpTools:
+    - server: exa
+      tools: [web_search_exa]
+  budget:
+    limitUSD: 100
+    resetCadence: monthly

@@ -1,0 +1,28 @@
+# The SRE team's tenant. The operator creates its namespace,
+# kora-tenant-sre. ../sre applies the team's agents, triggers and roles
+# there. kora keeps each tenant's people, agents, runs and spend apart.
+#
+# The oidc block points at the quickstart's Dex. On your own cluster, replace
+# it with the client your identity provider gives you. See
+# https://github.com/runkora/kora/blob/main/docs/guides/tenants.md.
+apiVersion: runkora.io/v1alpha1
+kind: KoraTenant
+metadata:
+  name: sre
+spec:
+  displayName: SRE
+  active: true
+  oidc:
+    issuerURL: https://dex.local.runkora.io:5557/dex
+    clientID: kora-quickstart
+    scopes: [openid, profile, email, groups]
+    # The console routes a person to this tenant by the domain of their email.
+    emailDomains:
+      - sre.local.runkora.io
+  # Enabled lets the team build agents in the console next to the declared
+  # ones. Set Disabled to make ../sre the only way to change them.
+  apiAuthoring: Enabled
+  # The tenant's spending limit across every agent and person.
+  budget:
+    limitUSD: 100
+    resetCadence: monthly

@@ -1,0 +1,6 @@
+# Answers Slack mentions with the agents the team's other use cases declare.
+# It declares a trigger and no agent of its own.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - triggers.yaml

@@ -1,0 +1,8 @@
+# Resources the team's use cases share. Each use case references them by
+# name.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - sources/alertmanager.yaml
+  - roles/sre.yaml
+  - mcp-servers/exa.yaml

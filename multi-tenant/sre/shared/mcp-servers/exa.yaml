@@ -1,0 +1,37 @@
+# Exa's hosted MCP server gives agents web search. The tool-gateway sends the
+# API key to Exa on every call. Agents never hold it.
+#
+# See https://github.com/runkora/kora/blob/main/docs/guides/register-mcp-server.md
+# to register your own MCP server.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: exa-credentials
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: example-secret-store
+  target:
+    name: exa-credentials
+  data:
+    - secretKey: apiKey
+      remoteRef:
+        key: sre-exa
+        property: apiKey
+---
+apiVersion: runkora.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: exa
+spec:
+  displayName: Exa
+  description: Web search and page contents.
+  endpoint: https://mcp.exa.ai/mcp
+  auth:
+    headers:
+      - name: Authorization
+        prefix: "Bearer "
+        secretRef:
+          name: exa-credentials
+          key: apiKey

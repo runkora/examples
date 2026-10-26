@@ -1,0 +1,9 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: on-alert-firing
+spec:
+  source: alertmanager
+  eventType: alert.firing
+  agent: sre-triage
+  promptTemplate: "Triage {{ commonLabels.alertname }}: {{ commonAnnotations.summary }}"

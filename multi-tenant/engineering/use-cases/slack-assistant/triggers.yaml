@@ -1,0 +1,18 @@
+# A routed trigger. The model picks the candidate agent that fits each
+# mention, and the fallback takes a mention the model is unsure about. Every
+# candidate must be an autonomous Agent resource in the same tenant.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: on-mention
+spec:
+  source: slack
+  eventType: mention
+  routing:
+    candidates: [code-reviewer, pr-reporter]
+    fallback: code-reviewer
+    # The model that picks the agent. A short decision suits a low-cost model.
+    model:
+      family: openai
+      name: gpt-6-luna
+  promptTemplate: "{{ event.text }}"
