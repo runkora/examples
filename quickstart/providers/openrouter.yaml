@@ -1,0 +1,33 @@
+# OpenRouter. Uncomment the resource below, set OPENROUTER_API_KEY in .env,
+# then run make credentials providers.
+#
+# make credentials stores the key in the Secret openrouter in kora-system. The
+# key stays out of this file. On your own cluster, create that Secret from your
+# secret manager.
+#
+# kora names the provider compatible:openrouter. The models in each example's
+# platform/models/ route to it.
+#
+# apiVersion: runkora.io/v1alpha1
+# kind: InferenceProvider
+# metadata:
+#   name: openrouter
+#   namespace: kora-system
+# spec:
+#   type: compatible
+#   displayName: OpenRouter
+#   # The models kora offers from OpenRouter. Remove the list to offer every
+#   # model OpenRouter serves.
+#   models:
+#     - anthropic/claude-haiku-5.5
+#     - deepseek/deepseek-v4.1-flash
+#     - openai/gpt-6-luna
+#   compatible:
+#     baseURL: https://openrouter.ai/api/v1
+#     apis:
+#       - chatCompletions
+#       - responses
+#       - messages
+#     apiKeySecretRef:
+#       name: openrouter
+#       key: apiKey

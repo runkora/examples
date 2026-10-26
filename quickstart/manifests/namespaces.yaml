@@ -1,0 +1,31 @@
+# The namespaces the quickstart installs into. make namespaces applies this
+# file before anything else.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kora-data
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dex
+---
+# The quickstart's credential store. make credentials writes the values from
+# .env here, and External Secrets Operator copies them into tenant namespaces.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kora-credentials
+---
+# kora's system namespace. The labels must exist before the first kora pod
+# starts: Istio injects a sidecar into every pod, and Pod Security admits only
+# restricted pods.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kora-system
+  labels:
+    istio-injection: enabled
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted

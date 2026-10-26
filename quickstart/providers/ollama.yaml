@@ -1,0 +1,34 @@
+# Ollama running on your machine. Uncomment the resource below and run
+# make providers to register it.
+#
+# This provider is for the quickstart only. host.k3d.internal is the name k3d
+# gives your machine inside its clusters, and values/kora.yaml opens port 11434
+# to it. On your own cluster, set baseURL to your Ollama server.
+#
+# Before you apply it, start Ollama and pull the model:
+#   ollama pull gpt-oss:20b
+#
+# kora names the provider compatible:ollama. The openai/gpt-oss-20b model in
+# each example's platform/models/gpt-oss-20b.yaml routes to it. Set an agent's
+# model to openai/gpt-oss-20b to run it here.
+#
+# apiVersion: runkora.io/v1alpha1
+# kind: InferenceProvider
+# metadata:
+#   name: ollama
+#   namespace: kora-system
+# spec:
+#   # compatible registers any endpoint that serves the OpenAI or Anthropic APIs.
+#   type: compatible
+#   displayName: Ollama
+#   models:
+#     - gpt-oss:20b
+#   compatible:
+#     # host.k3d.internal is your machine's address inside the cluster.
+#     baseURL: http://host.k3d.internal:11434/v1
+#     # Ollama serves all four APIs.
+#     apis:
+#       - chatCompletions
+#       - responses
+#       - embeddings
+#       - messages
