@@ -6,3 +6,6 @@
 
 # The JSON schemas make validate generates.
 .schemas/
+
+# The webhook tunnel's process ID, URL and log.
+.tunnel/

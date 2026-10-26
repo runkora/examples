@@ -44,7 +44,7 @@ The agent in `tenant/` uses the model `anthropic/claude-haiku-5-5`. `platform/mo
 3.  Set the webhook secret to the value of the `github-webhook` Secret in `kora-tenant-example`.
 4.  Select the pull request event.
 
-GitHub cannot reach the quickstart's API on your laptop. Connect the webhook on a cluster with a public API host.
+On the quickstart, run `make tunnel` first and use the webhook URL it prints, as described in [Receive webhooks locally](../quickstart/README.md#receive-webhooks-locally).
 
 ## Run it on your own cluster
 

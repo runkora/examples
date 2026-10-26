@@ -15,6 +15,9 @@ TRUST_DOMAIN := quickstart.runkora.test
 # Keys, passwords and certificates generated on your machine. Git ignores them.
 SECRETS := .secrets
 
+# The webhook tunnel's process ID, URL and log. Git ignores the folder.
+TUNNEL_DIR := .tunnel
+
 # The examples make example applies. For each example: the tenants its
 # platform repository declares, its tenant repositories and the user to sign in
 # as.
@@ -44,9 +47,9 @@ define apply
 $(KUBECTL) -n $(1) create $(2) --dry-run=client -o yaml | $(KUBECTL) apply -f -
 endef
 
-.PHONY: up tools cluster namespaces secrets istio spire data dex eso kora credentials providers example check-example apply-example status down clean
+.PHONY: up tools cluster namespaces secrets istio spire data dex eso kora credentials providers example check-example apply-example ask-tunnel tunnel tunnel-stop status down clean
 
-up: tools cluster namespaces secrets istio spire data dex eso kora credentials providers example
+up: tools cluster namespaces secrets istio spire data dex eso kora credentials providers example ask-tunnel
 
 # Checks the tools the install uses.
 tools:
@@ -261,8 +264,51 @@ status:
 	$(KUBECTL) get environments,agents.runkora.io,triggersources,triggers.runkora.io,policyroles,mcpservers,connections,externalsecrets -A
 	$(KUBECTL) get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
 
+# Asks whether to start the webhook tunnel. Set TUNNEL=yes or TUNNEL=no to
+# skip the question. Without a terminal to ask in, it starts no tunnel.
+ask-tunnel:
+	@answer="$(TUNNEL)"; \
+	if [ -z "$$answer" ] && [ -t 0 ]; then \
+		echo; \
+		printf "Start a tunnel so webhook triggers fire? It makes the cluster's API reachable from the internet. [y/N]: "; \
+		read answer; \
+	fi; \
+	case "$$answer" in y|Y|yes) $(MAKE) --no-print-directory tunnel;; esac
+
+# Starts a Cloudflare quick tunnel to the kora API, then prints the webhook URL
+# for every trigger source in the cluster. Paste each URL and its secret into
+# the provider's webhook settings. The URL changes each time the tunnel starts.
+#
+# The tunnel forwards to the gateway on localhost:9443 as api.local.runkora.io.
+# The webhook path accepts only events signed with the source's secret. The
+# console and the API still need a sign-in.
+tunnel: tunnel-stop
+	@command -v cloudflared >/dev/null || { echo "Missing cloudflared. Install it with brew install cloudflared."; exit 1; }
+	@mkdir -p $(TUNNEL_DIR)
+	@nohup cloudflared tunnel --no-autoupdate --url https://localhost:9443 \
+		--http-host-header api.local.runkora.io --origin-server-name api.local.runkora.io \
+		--no-tls-verify > $(TUNNEL_DIR)/cloudflared.log 2>&1 & echo $$! > $(TUNNEL_DIR)/pid
+	@for i in $$(seq 30); do \
+		url=$$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' $(TUNNEL_DIR)/cloudflared.log | head -1); \
+		[ -n "$$url" ] && break; sleep 1; \
+	done; \
+	[ -n "$$url" ] || { echo "The tunnel did not start. See $(TUNNEL_DIR)/cloudflared.log."; exit 1; }; \
+	echo "$$url" > $(TUNNEL_DIR)/url; \
+	echo; echo "Tunnel: $$url"; echo; \
+	$(KUBECTL) get triggersources -A -o jsonpath='{range .items[*]}{.metadata.namespace} {.metadata.name} {.spec.provider} {.status.webhookPath} {.spec.signingSecretRef.name} {.spec.signingSecretRef.key}{"\n"}{end}' | \
+	while read ns name provider path secret key; do \
+		echo "$$ns/$$name ($$provider)"; \
+		echo "  URL:     $$url$$path"; \
+		echo "  Secret:  kubectl --context $(CONTEXT) -n $$ns get secret $$secret -o jsonpath='{.data.$$key}' | base64 -d"; \
+	done; \
+	echo; echo "Stop it with make tunnel-stop."
+
+# Stops the webhook tunnel.
+tunnel-stop:
+	@if [ -f $(TUNNEL_DIR)/pid ]; then kill $$(cat $(TUNNEL_DIR)/pid) 2>/dev/null || true; rm -f $(TUNNEL_DIR)/pid $(TUNNEL_DIR)/url; fi
+
 # Deletes the cluster. The next make up reuses the files in .secrets.
-down:
+down: tunnel-stop
 	k3d cluster delete $(CLUSTER)
 
 # Deletes the cluster and the generated files.
