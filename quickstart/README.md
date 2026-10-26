@@ -83,6 +83,7 @@ Each stage is a `make` target. Run one on its own to watch what it installs.
 10.  **`make credentials`:** Creates a Secret for each value set in `.env`, and generates a webhook signing secret per tenant and provider. It prints each variable and Secret name.
 11.  **`make providers`:** Applies the providers you uncommented in `providers/`.
 12.  **`make example`:** Asks which example to run, applies its platform repository, waits for the operator to create each tenant's namespace, then applies its tenant repositories.
+13.  **`make ask-tunnel`:** Asks whether to start a webhook tunnel. See [Receive webhooks locally](#receive-webhooks-locally).
 
 Inspect the cluster between stages with `kubectl --context k3d-kora-quickstart get pods -A`.
 
@@ -105,7 +106,18 @@ The users and their groups live in `manifests/dex/glauth.yaml`. kora reads a per
 
 Run `make example` and choose another example. The examples declare different tenants and can run side by side. To apply one by hand, apply its `platform/` folder first, then each tenant repository once the tenant namespaces exist.
 
-A webhook trigger fires only when the provider can reach the cluster. Providers cannot reach a cluster on your laptop. Use manual and scheduled triggers locally.
+## Receive webhooks locally
+
+A webhook trigger fires only when the provider can reach the cluster. A tunnel gives the cluster's API a public URL. Start one by answering yes to the tunnel question at the end of `make up`, or by running `make up TUNNEL=yes`. `make tunnel` starts one at any time.
+
+1.  Install `cloudflared`, such as with `brew install cloudflared` on macOS.
+2.  Run `make tunnel`. It starts a Cloudflare quick tunnel and prints each trigger source's webhook URL and the command that prints its signing secret.
+3.  In the provider, such as a GitHub repository's webhook settings, set the URL and the secret. Select the events the example's triggers use.
+4.  Stop the tunnel with `make tunnel-stop` or `make down`.
+
+The tunnel makes the console and the API reachable from the internet while it runs. The webhook path accepts only events signed with the source's secret, and the console and the API still need a sign-in.
+
+A quick tunnel gets a new URL each time it starts. Update the provider's webhook URL after each `make tunnel`. For a URL that stays the same, create a [named Cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/) or use ngrok with a reserved domain. Point either one at `https://localhost:9443` with the host header `api.local.runkora.io`.
 
 ## How an agent reaches a model
 

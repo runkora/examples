@@ -24,7 +24,7 @@ KUBECONFORM := kubeconform -strict -summary \
 
 # The quickstart targets this file forwards. Keep the list in step with the
 # targets in quickstart/Makefile.
-QUICKSTART_TARGETS := up tools cluster namespaces secrets istio spire data dex eso kora credentials providers example check-example apply-example status down clean
+QUICKSTART_TARGETS := up tools cluster namespaces secrets istio spire data dex eso kora credentials providers example check-example apply-example ask-tunnel tunnel tunnel-stop status down clean
 
 .PHONY: validate schemas $(QUICKSTART_TARGETS)
 
