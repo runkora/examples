@@ -21,17 +21,20 @@ TUNNEL_DIR := .tunnel
 # The examples make example applies. For each example: the tenants its
 # platform repository declares, its tenant repositories and the user to sign in
 # as.
-EXAMPLES := single-tenant multi-tenant
+EXAMPLES := single-tenant multi-tenant factories/autofix
 TENANTS_single-tenant := example
 REPOS_single-tenant := tenant
 SIGN_IN_single-tenant := admin@local.runkora.io
 TENANTS_multi-tenant := engineering sre
 REPOS_multi-tenant := engineering sre
 SIGN_IN_multi-tenant := admin@engineering.local.runkora.io or admin@sre.local.runkora.io
+TENANTS_factories/autofix := autofix
+REPOS_factories/autofix := factory
+SIGN_IN_factories/autofix := admin@autofix.local.runkora.io
 
 # The webhook signing secrets the examples' trigger sources read, one per
 # tenant and provider. make credentials generates each one.
-WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook
+WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook
 
 # The credentials you fill in from .env.example. The install runs without the
 # file, and make credentials skips each value that is not set.
@@ -181,8 +184,9 @@ credentials: $(addprefix $(SECRETS)/,$(WEBHOOK_SECRETS))
 		$(call apply,kora-credentials,secret generic sre-exa --from-literal=apiKey="$$EXA_API_KEY"); \
 	fi
 	@if [ -n "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
-		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secret engineering-github-app in kora-credentials"; \
+		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app and autofix-github-app in kora-credentials"; \
 		$(call apply,kora-credentials,secret generic engineering-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
+		$(call apply,kora-credentials,secret generic autofix-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 	fi
 	@for name in $(WEBHOOK_SECRETS); do \
 		echo "$(SECRETS)/$$name -> Secret $$name in kora-credentials"; \
@@ -208,9 +212,10 @@ example:
 		echo "Which example should run on the cluster?"; \
 		echo "  1) single-tenant  One tenant with one agent. Needs a model provider only."; \
 		echo "  2) multi-tenant   Two teams with four use cases. Also needs an Exa key and a GitHub App."; \
-		echo "  3) none           Apply one later with make example."; \
-		printf "Choose 1, 2 or 3 [1]: "; read choice; \
-		case "$$choice" in 2) example=multi-tenant;; 3) example=none;; *) example=single-tenant;; esac; \
+		echo "  3) autofix        A factory that finds, verifies and fixes bugs. Needs a GitHub App and a repository."; \
+		echo "  4) none           Apply one later with make example."; \
+		printf "Choose 1, 2, 3 or 4 [1]: "; read choice; \
+		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=none;; *) example=single-tenant;; esac; \
 	fi; \
 	[ "$${example:-single-tenant}" = none ] || $(MAKE) --no-print-directory apply-example EXAMPLE=$${example:-single-tenant}
 
@@ -231,6 +236,21 @@ ifeq ($(EXAMPLE),multi-tenant)
 	fi; \
 	if [ $$missing = 1 ]; then \
 		echo "See multi-tenant/README.md. Then run make credentials example EXAMPLE=multi-tenant."; exit 1; \
+	fi
+endif
+ifeq ($(EXAMPLE),factories/autofix)
+	@missing=0; \
+	if [ ! -f "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
+		echo "autofix: set GITHUB_APP_PRIVATE_KEY_FILE in quickstart/.env to your GitHub App's private key file."; missing=1; \
+	fi; \
+	if grep -q 'owner: example-org' ../factories/autofix/factory/shared/github-connection.yaml; then \
+		echo "autofix: set app_id, installation_id and owner in factories/autofix/factory/shared/github-connection.yaml."; missing=1; \
+	fi; \
+	if grep -rqF -e 'example-org/example-repo' -e 'example-autofix[bot]' ../factories/autofix/factory/triggers; then \
+		echo "autofix: replace example-org/example-repo and example-autofix[bot] in factories/autofix/factory/triggers with your repository and your App's bot user."; missing=1; \
+	fi; \
+	if [ $$missing = 1 ]; then \
+		echo "See factories/autofix/README.md. Then run make credentials example EXAMPLE=factories/autofix."; exit 1; \
 	fi
 endif
 

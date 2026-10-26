@@ -19,15 +19,19 @@
 #   # The models kora offers from OpenRouter. Remove the list to offer every
 #   # model OpenRouter serves.
 #   models:
+#     - anthropic/claude-sonnet-5.5
 #     - anthropic/claude-haiku-5.5
 #     - deepseek/deepseek-v4.1-flash
 #     - openai/gpt-6-luna
+#     - typesafe/jev-1.14
 #   compatible:
 #     baseURL: https://openrouter.ai/api/v1
+#     # systemone serves the decision model that routed triggers use.
 #     apis:
 #       - chatCompletions
 #       - responses
 #       - messages
+#       - systemone
 #     apiKeySecretRef:
 #       name: openrouter
 #       key: apiKey

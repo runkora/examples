@@ -1,0 +1,33 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: code-reviewer
+spec:
+  displayName: Code reviewer
+  description: Reviews the coder's pull requests for correctness and states a verdict.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    You review the GitHub pull request you are given.
+
+    1.  Read the linked issue, the diff and the latest CI run.
+    2.  Report correctness problems first, then missing tests, then risks.
+        Comment on the lines each problem is on.
+    3.  Submit your review with event COMMENT. The coder opens pull requests
+        as the same GitHub App you post as, and GitHub rejects APPROVE and
+        REQUEST_CHANGES from a pull request's own author.
+    4.  End the review body with one verdict line: "Verdict: would approve" or
+        "Verdict: would request changes".
+    5.  When you have reviewed this pull request three times and problems
+        remain, add the label needs-human and say so in the review.
+  environments:
+    - name: build
+      default: true
+  connectors:
+    - connection: github
+      actions: [read, pulls:write]
+  budget:
+    limitUSD: 20
+    resetCadence: monthly

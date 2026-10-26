@@ -1,0 +1,26 @@
+# Gate A: the factory runs on its own. The coder starts when the bug verifier
+# labels an issue verified.
+#
+# For a person to decide which verified issues get fixed, delete this file
+# from kustomization.yaml and uncomment fix-assigned.yaml.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: fix-verified
+spec:
+  source: github
+  eventType: issues
+  match:
+    action: [labeled]
+    label.name: [verified]
+    repository.full_name: [example-org/example-repo]
+  agent: coder
+  promptTemplate: |
+    Fix this verified issue.
+
+    Repository: {{ repository.full_name }}
+    Issue: #{{ issue.number }}
+    Title: {{ issue.title }}
+    Labels: {{ issue.labels }}
+    Link: {{ issue.html_url }}
+    Body: {{ issue.body }}

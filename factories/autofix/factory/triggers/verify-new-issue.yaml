@@ -1,0 +1,19 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: verify-new-issue
+spec:
+  source: github
+  eventType: issues
+  match:
+    action: [opened]
+    repository.full_name: [example-org/example-repo]
+  agent: bug-verifier
+  promptTemplate: |
+    Verify this issue.
+
+    Repository: {{ repository.full_name }}
+    Issue: #{{ issue.number }}
+    Title: {{ issue.title }}
+    Link: {{ issue.html_url }}
+    Body: {{ issue.body }}

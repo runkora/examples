@@ -1,0 +1,15 @@
+# The maintainer role. People whose groups claim includes maintainer can see
+# the factory's agents and triggers, and read every agent's runs.
+apiVersion: runkora.io/v1alpha1
+kind: PolicyRole
+metadata:
+  name: maintainer
+spec:
+  role: maintainer
+  scopes:
+    - agents:types:read
+    - triggers:read
+    - agents:runs:bug-hunter:read
+    - agents:runs:bug-verifier:read
+    - agents:runs:coder:read
+    - agents:runs:code-reviewer:read

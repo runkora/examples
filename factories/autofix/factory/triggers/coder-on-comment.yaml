@@ -1,0 +1,31 @@
+# The contains filter limits the trigger to pull requests. The bug hunter's
+# issues also have the factory as their author.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: coder-on-comment
+spec:
+  source: github
+  eventType: issue_comment
+  match:
+    action: [created]
+    issue.user.login: ["example-autofix[bot]"]
+    repository.full_name: [example-org/example-repo]
+  matchContains:
+    issue.pull_request.html_url: [/pull/]
+  senderRestriction:
+    roles: [OWNER, MEMBER, COLLABORATOR]
+  routing:
+    candidates: [coder]
+    model:
+      family: typesafe
+      name: jev-1-14
+    fallback: coder
+    joinRuns: true
+  promptTemplate: |
+    {{ comment.user.login }} commented on your pull request. Do what the comment asks.
+
+    Repository: {{ repository.full_name }}
+    Pull request: #{{ issue.number }}
+    Link: {{ issue.html_url }}
+    Comment: {{ comment.body }}

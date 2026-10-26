@@ -1,0 +1,30 @@
+# Gate B. The coder starts when a person assigns a verified issue to the
+# factory's GitHub user.
+#
+# GitHub Apps cannot be assigned issues. Create a GitHub user for the factory,
+# such as example-autofix-agent, and give it access to the repository.
+#
+# To use this gate, uncomment the resource below and delete fix-verified.yaml
+# from kustomization.yaml.
+#
+# apiVersion: runkora.io/v1alpha1
+# kind: Trigger
+# metadata:
+#   name: fix-assigned
+# spec:
+#   source: github
+#   eventType: issues
+#   match:
+#     action: [assigned]
+#     assignee.login: [example-autofix-agent]
+#     repository.full_name: [example-org/example-repo]
+#   agent: coder
+#   promptTemplate: |
+#     Fix this issue. {{ sender.login }} assigned it to the factory.
+#
+#     Repository: {{ repository.full_name }}
+#     Issue: #{{ issue.number }}
+#     Title: {{ issue.title }}
+#     Labels: {{ issue.labels }}
+#     Link: {{ issue.html_url }}
+#     Body: {{ issue.body }}

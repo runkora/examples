@@ -26,6 +26,7 @@ The quickstart installs runkora on a local k3d cluster. It installs Istio, SPIRE
 3.  **Choose an example:** At the end, `make up` asks which example to apply:
     *   **[`single-tenant`](../single-tenant):** One tenant with one agent that runs on the model provider alone.
     *   **[`multi-tenant`](../multi-tenant):** Two tenants, engineering and SRE, with four use cases. It also needs an Exa API key and a GitHub App.
+    *   **[`autofix`](../factories/autofix):** A factory that finds, verifies and fixes bugs in a GitHub repository. It needs a GitHub App and a repository.
     *   **`none`:** Installs kora with no tenants. You can apply an example later with `make example`.
 
     Set `EXAMPLE` to skip the question, such as `make up EXAMPLE=multi-tenant`.
@@ -40,6 +41,8 @@ Each example declares four models in its `platform/models/`:
 *   `anthropic/claude-haiku-5-5` routes to OpenRouter and is the default model for the agents.
 *   `deepseek/deepseek-v4-1-flash` and `openai/gpt-6-luna` route to OpenRouter.
 *   `openai/gpt-oss-20b` routes to Ollama.
+
+`multi-tenant` and `autofix` also declare `typesafe/jev-1-14`, a decision model on OpenRouter that their routed triggers use to pick an agent.
 
 ### OpenRouter
 
@@ -99,6 +102,9 @@ Every user signs in with the password `password`. kora routes each person to a t
     *   `dev@engineering.local.runkora.io`: Tenant `engineering`, groups `reviewer` and `kora-viewer`.
     *   `admin@sre.local.runkora.io`: Tenant `sre`, group `platform-admin`.
     *   `oncall@sre.local.runkora.io`: Tenant `sre`, groups `sre` and `kora-viewer`.
+*   **`autofix`:**
+    *   `admin@autofix.local.runkora.io`: Group `platform-admin`.
+    *   `maintainer@autofix.local.runkora.io`: Group `maintainer`.
 
 The users and their groups live in `manifests/dex/glauth.yaml`. kora reads a person's roles from the `groups` claim in their ID token. `platform-admin` holds every scope in kora, and `kora-viewer` reads everything in the tenant. Both are built-in roles that kora maps from the group name. Each example grants the other groups their scopes with `PolicyRole` resources.
 

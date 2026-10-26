@@ -1,0 +1,34 @@
+# The GitHub webhook the factory's triggers read events from. Point a webhook
+# on the target repository at the API host plus status.webhookPath, with the
+# signing secret stored under the remote key below.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-webhook
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: example-secret-store
+  target:
+    name: github-webhook
+    template:
+      metadata:
+        labels:
+          # kora reads only Secrets that carry this label.
+          runkora.io/trigger-source: "true"
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: autofix-github-webhook
+        property: secret
+---
+apiVersion: runkora.io/v1alpha1
+kind: TriggerSource
+metadata:
+  name: github
+spec:
+  provider: github
+  signingSecretRef:
+    name: github-webhook
+    key: secret

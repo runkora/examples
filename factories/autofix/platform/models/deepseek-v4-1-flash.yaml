@@ -1,0 +1,17 @@
+# deepseek/deepseek-v4-1-flash is the low-cost model the bug hunter reads the
+# codebase with. It routes to the OpenRouter provider in quickstart/providers.
+apiVersion: runkora.io/v1alpha1
+kind: VirtualModel
+metadata:
+  name: deepseek-deepseek-v4-1-flash
+  namespace: kora-system
+spec:
+  family: deepseek
+  name: deepseek-v4-1-flash
+  displayName: DeepSeek V4.1 Flash
+  description: DeepSeek V4.1 Flash through OpenRouter.
+  strategy: priority
+  routes:
+    - provider: compatible:openrouter
+      modelID: deepseek/deepseek-v4.1-flash
+      priority: 1
