@@ -1,0 +1,8 @@
+# Keys, passwords and certificates the examples generate on your machine.
+.secrets/
+
+# The credentials you fill in from .env.example.
+.env
+
+# The JSON schemas make validate generates.
+.schemas/

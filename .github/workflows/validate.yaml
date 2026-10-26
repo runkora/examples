@@ -1,0 +1,24 @@
+# Validates every manifest against the schemas of the versions in versions.mk.
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The runner image ships helm and kubectl.
+      - name: Install kubeconform and PyYAML
+        run: |
+          curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz \
+            | sudo tar xz -C /usr/local/bin kubeconform
+          sudo apt-get install -y python3-yaml
+      - run: helm version && kubectl version --client
+      - run: make validate
