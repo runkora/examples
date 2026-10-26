@@ -1,0 +1,43 @@
+# What kora requires of SPIRE. Everything else is the chart default. The
+# Makefile sets the trust domain and cluster name.
+spire-server:
+  controllerManager:
+    identities:
+      clusterSPIFFEIDs:
+        # kora registers its own workload identities. The chart's catch-all
+        # registration would race them.
+        default:
+          enabled: false
+  nodeAttestor:
+    k8sPSAT:
+      enabled: true
+      serviceAccountAllowList:
+        - spire-system:spire-agent
+
+spire-agent:
+  # Every node that runs kora or agent pods needs a SPIRE agent.
+  tolerations:
+    - operator: Exists
+  # Istio sidecars fetch their certificates from the agent over SDS, under
+  # these resource names.
+  sds:
+    enabled: true
+    defaultSVIDName: default
+    defaultBundleName: ROOTCA
+    defaultAllBundlesName: ALL
+  nodeAttestor:
+    k8sPSAT:
+      enabled: true
+  workloadAttestors:
+    k8s:
+      enabled: true
+      disableContainerSelectors: true
+      useNewContainerLocator: false
+
+spiffe-csi-driver:
+  enabled: true
+  tolerations:
+    - operator: Exists
+
+spire-controller-manager:
+  enabled: true

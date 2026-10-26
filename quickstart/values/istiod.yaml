@@ -1,0 +1,8 @@
+# What kora requires of istiod: CNI mode and a discovery address. The Makefile
+# sets meshConfig.trustDomain to the trust domain SPIRE and kora share.
+meshConfig:
+  defaultConfig:
+    discoveryAddress: istiod.istio-system.svc:15012
+pilot:
+  cni:
+    enabled: true

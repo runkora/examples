@@ -1,0 +1,174 @@
+# glauth is a small LDAP directory that holds the quickstart's users and groups.
+# kora reads a person's roles from the groups claim in their ID token. Dex's
+# built-in password database has no groups. Dex reads its users from glauth.
+#
+# kora routes a person to a tenant by the domain of their email. Each example
+# in ../single-tenant and ../multi-tenant declares the tenants these domains
+# belong to.
+#
+# Every user has the password "password" (passsha256 is its SHA-256).
+#   admin@local.runkora.io               single-tenant   platform-admin, engineer
+#   engineer@local.runkora.io            single-tenant   engineer, kora-viewer
+#   admin@engineering.local.runkora.io   multi-tenant    platform-admin
+#   dev@engineering.local.runkora.io     multi-tenant    reviewer, kora-viewer
+#   admin@sre.local.runkora.io           multi-tenant    platform-admin
+#   oncall@sre.local.runkora.io          multi-tenant    sre, kora-viewer
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glauth
+  namespace: dex
+data:
+  config.cfg: |
+    [ldap]
+      enabled = true
+      listen = "0.0.0.0:3893"
+    [ldaps]
+      enabled = false
+    [backend]
+      datastore = "config"
+      baseDN = "dc=kora,dc=local"
+
+    # Dex binds as this account to search users and groups.
+    [[users]]
+      name = "serviceuser"
+      mail = "service@local.runkora.io"
+      uidnumber = 5000
+      primarygroup = 5000
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+      [[users.capabilities]]
+        action = "search"
+        object = "*"
+
+    [[users]]
+      name = "admin"
+      givenname = "Admin"
+      sn = "User"
+      mail = "admin@local.runkora.io"
+      uidnumber = 1001
+      primarygroup = 1100
+      othergroups = [5001, 5003]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "engineer"
+      givenname = "Engineer"
+      sn = "User"
+      mail = "engineer@local.runkora.io"
+      uidnumber = 1002
+      primarygroup = 1100
+      othergroups = [5003, 5002]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "engineering-admin"
+      givenname = "Admin"
+      sn = "User"
+      mail = "admin@engineering.local.runkora.io"
+      uidnumber = 1003
+      primarygroup = 1100
+      othergroups = [5001]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "engineering-dev"
+      givenname = "Dev"
+      sn = "User"
+      mail = "dev@engineering.local.runkora.io"
+      uidnumber = 1004
+      primarygroup = 1100
+      othergroups = [5004, 5002]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "sre-admin"
+      givenname = "Admin"
+      sn = "User"
+      mail = "admin@sre.local.runkora.io"
+      uidnumber = 1005
+      primarygroup = 1100
+      othergroups = [5001]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "sre-oncall"
+      givenname = "Oncall"
+      sn = "User"
+      mail = "oncall@sre.local.runkora.io"
+      uidnumber = 1006
+      primarygroup = 1100
+      othergroups = [5005, 5002]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[groups]]
+      name = "svcaccts"
+      gidnumber = 5000
+    [[groups]]
+      name = "users"
+      gidnumber = 1100
+    # platform-admin holds every scope in kora. Grant it to the people who run
+    # the platform.
+    [[groups]]
+      name = "platform-admin"
+      gidnumber = 5001
+    # kora-viewer is a built-in role: it reads every agent, environment,
+    # trigger and connection in the tenant, and starts nothing. kora maps the
+    # group to the role by name, with no PolicyRole.
+    [[groups]]
+      name = "kora-viewer"
+      gidnumber = 5002
+    # The roles the examples define as PolicyRole resources.
+    [[groups]]
+      name = "engineer"
+      gidnumber = 5003
+    [[groups]]
+      name = "reviewer"
+      gidnumber = 5004
+    [[groups]]
+      name = "sre"
+      gidnumber = 5005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glauth
+  namespace: dex
+spec:
+  selector:
+    app: glauth
+  ports:
+    - name: tcp-ldap
+      port: 3893
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glauth
+  namespace: dex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: glauth
+  template:
+    metadata:
+      labels:
+        app: glauth
+    spec:
+      containers:
+        - name: glauth
+          image: ghcr.io/glauth/glauth:v2.5.4
+          command: [/app/glauth, -c, /etc/glauth/config.cfg]
+          ports:
+            - containerPort: 3893
+          readinessProbe:
+            tcpSocket:
+              port: 3893
+            periodSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/glauth
+      volumes:
+        - name: config
+          configMap:
+            name: glauth

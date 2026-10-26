@@ -1,0 +1,45 @@
+# Redis for kora. In production you point config.redis at a managed instance.
+# This instance keeps no data across restarts.
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: kora-data
+spec:
+  selector:
+    app: redis
+  ports:
+    - name: tcp-redis
+      port: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: kora-data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:8-alpine
+          args: [--requirepass, $(REDIS_PASSWORD)]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: password
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            exec:
+              command: [sh, -c, redis-cli -a "$REDIS_PASSWORD" --no-auth-warning ping]
+            periodSeconds: 5

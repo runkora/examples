@@ -1,0 +1,63 @@
+# Postgres for kora. kora does not provision its database. In production you
+# point config.db at a managed instance. The kora chart's migrate hook creates
+# the schema on install.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: kora-data
+spec:
+  selector:
+    app: postgres
+  ports:
+    - name: tcp-postgres
+      port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: kora-data
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:18-alpine
+          env:
+            - name: POSTGRES_USER
+              value: kora
+            - name: POSTGRES_DB
+              value: kora
+            # make secrets generates the password and stores it in both
+            # namespaces: here for Postgres, and in kora-secrets for kora.
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: password
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, kora, -d, kora]
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 5Gi

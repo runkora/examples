@@ -1,0 +1,9 @@
+# kora runs its namespaces at the restricted Pod Security level. That level
+# rejects Istio's privileged istio-init container. The Istio CNI plugin sets up
+# pod networking in its place.
+#
+# k3s keeps its CNI binaries and config under /var/lib/rancher. Other
+# distributions use the chart defaults.
+cni:
+  cniBinDir: /var/lib/rancher/k3s/data/cni
+  cniConfDir: /var/lib/rancher/k3s/agent/etc/cni/net.d
