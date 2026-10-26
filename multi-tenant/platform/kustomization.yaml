@@ -16,3 +16,4 @@ resources:
   - models/deepseek-v4-1-flash.yaml
   - models/gpt-6-luna.yaml
   - models/gpt-oss-20b.yaml
+  - models/jev-1-14.yaml

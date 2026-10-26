@@ -45,7 +45,7 @@ Sign in as `admin@engineering.local.runkora.io` or `admin@sre.local.runkora.io`.
 
 ## How the agents reach a model
 
-`code-reviewer` and `sre-triage` use `anthropic/claude-haiku-5-5`, `pr-reporter` uses `deepseek/deepseek-v4-1-flash`, and the `on-mention` trigger picks its agent with `openai/gpt-6-luna`. `platform/models/` declares the models and routes each to a provider, `compatible:openrouter` or `compatible:ollama`. The [quickstart](../quickstart) registers its providers in `quickstart/providers/`, for the quickstart only. To run on Ollama, set each agent's `model` to `openai/gpt-oss-20b` as described in [Choose a model provider](../quickstart/README.md#choose-a-model-provider). The tenants reference no provider. A change to where a model runs touches its file in `platform/models/` alone.
+`code-reviewer` and `sre-triage` use `anthropic/claude-haiku-5-5`, `pr-reporter` uses `deepseek/deepseek-v4-1-flash`, and the `on-mention` trigger picks its agent with the decision model `typesafe/jev-1-14`. `platform/models/` declares the models and routes each to a provider, `compatible:openrouter` or `compatible:ollama`. The [quickstart](../quickstart) registers its providers in `quickstart/providers/`, for the quickstart only. To run on Ollama, set each agent's `model` to `openai/gpt-oss-20b` as described in [Choose a model provider](../quickstart/README.md#choose-a-model-provider). The tenants reference no provider. A change to where a model runs touches its file in `platform/models/` alone.
 
 ## Add a use case
 

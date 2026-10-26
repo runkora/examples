@@ -11,8 +11,8 @@ spec:
   routing:
     candidates: [code-reviewer, pr-reporter]
     fallback: code-reviewer
-    # The model that picks the agent. A short decision suits a low-cost model.
+    # The decision model that picks the agent.
     model:
-      family: openai
-      name: gpt-6-luna
+      family: typesafe
+      name: jev-1-14
   promptTemplate: "{{ event.text }}"
