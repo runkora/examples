@@ -16,5 +16,9 @@ SPIRE_VERSION ?= 0.30.2
 # the quickstart's credential store or your secret manager.
 ESO_VERSION ?= 2.14.0
 
+# The opencost chart 2.5.33 ships OpenCost 1.121.3. The sre example's cost
+# sweeper reads it through OpenCost's MCP server.
+OPENCOST_VERSION ?= 2.5.33
+
 # The kora charts require Kubernetes 1.34 or later.
 K3S_IMAGE ?= rancher/k3s:v1.36.4-k3s1

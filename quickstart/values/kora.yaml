@@ -36,6 +36,12 @@ networkPolicy:
     - cidr: 0.0.0.0/0
       ports: [11434]
 
+egressGateway:
+  # The sre example's cluster connection reaches the k3d API server, which
+  # listens on 6443.
+  upstreamPorts:
+    - 6443
+
 gateway:
   tls:
     enabled: true

@@ -1,0 +1,14 @@
+# OpenCost for the sre example's cost sweeper. The quickstart runs no
+# Prometheus. The collector data source reads the cluster directly, and the MCP
+# server on port 8081 serves the cost tools.
+opencost:
+  exporter:
+    collectorDataSource:
+      enabled: true
+  prometheus:
+    internal:
+      enabled: false
+  mcp:
+    enabled: true
+  ui:
+    enabled: false
