@@ -17,8 +17,10 @@ spec:
     1.  Read the issue and the evidence it gives.
     2.  Clone the repository, make the smallest change that does what the
         issue recommends and push a branch named remediate/<issue>.
-    3.  Open a pull request whose body starts with "Fixes #<issue>" and states
-        what you changed and why.
+    3.  Open a pull request that states what you changed and why. For an
+        incident, start the body with "Refs #<issue>". The incident stays
+        open until its alert resolves. For a cost issue, start the body with
+        "Fixes #<issue>".
     4.  Comment on the issue with a link to the pull request.
 
     For a review or a comment on your pull request, read every review and

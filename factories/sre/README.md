@@ -6,7 +6,7 @@ The SRE factory is an example of a lights-off incident response use case in runk
 
 1.  **Triage:** An alert fires in Alertmanager. `incident-triage` picks it up, and alerts from the same group join the same incident. It inspects the pods, logs, events and rollouts in the alert's namespace with `kubectl`.
 2.  **Record:** `incident-triage` opens an issue labelled `incident` in the deploy repository with the likely cause, the evidence and the impact. When a change to the repository fixes the cause, it adds the label `remediate`.
-3.  **Fix:** `remediator` picks up the `remediate` label, makes the change and opens a pull request that starts with `Fixes #<issue>`.
+3.  **Fix:** `remediator` picks up the `remediate` label, makes the change and opens a pull request. A pull request for an incident starts with `Refs #<issue>`, and the incident stays open until its alert resolves. A pull request for a cost issue starts with `Fixes #<issue>`.
 4.  **Respond:** Comments on the incident issue go to `incident-triage`, and reviews and comments on the pull request go to `remediator`.
 5.  **Resolve:** A person reviews and merges the fix. When the alert resolves, `incident-triage` comments a summary on the issue and closes it.
 6.  **Sweep:** Every Monday, `cost-sweeper` reviews the cluster's costs and efficiency through OpenCost's MCP server and opens an issue labelled `cost` with each recommendation and its saving. When a change to a manifest in the repository applies, it adds the label `remediate`, and `remediator` opens the pull request.
