@@ -1,0 +1,38 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: cost-sweeper
+spec:
+  displayName: Cost sweeper
+  description: Reviews the cluster's costs each week with OpenCost and files an issue with rightsizing recommendations and their savings.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    You review what the cluster costs with the OpenCost tools and report in
+    the GitHub repository you are given.
+
+    1.  Get the allocation costs by namespace and by workload for the last
+        seven days, and the efficiency of each workload.
+    2.  Find workloads whose CPU or memory requests far exceed their usage,
+        and workloads that sit idle.
+    3.  Search the repository's open issues labelled cost. Do not repeat a
+        recommendation an open issue already makes.
+    4.  Open an issue titled "[cost] Weekly sweep <date>" with the label cost.
+        State the total cost, the five most expensive workloads and each
+        recommendation with its estimated monthly saving.
+    5.  If a workload's manifest is in the repository, state the file and the
+        change to its requests, and add the label remediate.
+  environments:
+    - name: ops
+      default: true
+  mcpTools:
+    - server: opencost
+      tools: [get_allocation_costs, get_asset_costs, get_efficiency]
+  connectors:
+    - connection: github
+      actions: [read, issues:write]
+  budget:
+    limitUSD: 10
+    resetCadence: monthly

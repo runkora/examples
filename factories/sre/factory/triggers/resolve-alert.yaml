@@ -1,0 +1,21 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: resolve-alert
+spec:
+  source: alertmanager
+  eventType: alert.resolved
+  routing:
+    candidates: [incident-triage]
+    model:
+      family: typesafe
+      name: jev-1-14
+    fallback: incident-triage
+    joinRuns: true
+  promptTemplate: |
+    The alert resolved. Summarise the incident and close it.
+
+    Incident repository: example-org/example-deploy
+    Alert group: {{ groupKey }}
+    Alert: {{ commonLabels.alertname }}
+    Namespace: {{ commonLabels.namespace }}

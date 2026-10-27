@@ -1,0 +1,15 @@
+# The sandbox the agents run kubectl and git in. kora-base ships kubectl, and
+# the sandbox writes its kubeconfig for each cluster connection the agent holds.
+apiVersion: runkora.io/v1alpha1
+kind: Environment
+metadata:
+  name: ops
+spec:
+  displayName: Ops
+  description: Inspects the cluster with kubectl and edits the deploy repository.
+  sandboxImage: kora-base
+  # Each run gets its own sandbox of this size.
+  size:
+    cpu: 500m
+    memory: 1Gi
+    disk: 5Gi

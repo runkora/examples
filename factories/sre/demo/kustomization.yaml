@@ -1,0 +1,7 @@
+# A deploy repository with one broken workload for the factory to fix. Push
+# this folder to the repository the factory keeps its incidents in. On the
+# quickstart, make example applies it to the cluster.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - shop/checkout.yaml

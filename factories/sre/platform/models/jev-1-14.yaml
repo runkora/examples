@@ -1,0 +1,17 @@
+# The decision model that routed triggers use to pick an agent or an open run.
+# Routing needs a decision model. A chat model cannot route.
+apiVersion: runkora.io/v1alpha1
+kind: VirtualModel
+metadata:
+  name: typesafe-jev-1-14
+  namespace: kora-system
+spec:
+  family: typesafe
+  name: jev-1-14
+  displayName: Jev 1.14
+  description: TypeSafe Jev 1.14 decision model through OpenRouter.
+  strategy: priority
+  routes:
+    - provider: compatible:openrouter
+      modelID: typesafe/jev-1.14
+      priority: 1

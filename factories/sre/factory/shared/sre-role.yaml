@@ -1,0 +1,14 @@
+# The sre role. People whose groups claim includes sre can see the factory's
+# agents and triggers, and read every agent's runs.
+apiVersion: runkora.io/v1alpha1
+kind: PolicyRole
+metadata:
+  name: sre
+spec:
+  role: sre
+  scopes:
+    - agents:types:read
+    - triggers:read
+    - agents:runs:incident-triage:read
+    - agents:runs:remediator:read
+    - agents:runs:cost-sweeper:read
