@@ -288,7 +288,7 @@ apply-example: check-example
 	done
 ifeq ($(EXAMPLE),factories/sre)
 	$(HELM_INSTALL) opencost opencost --repo https://opencost.github.io/opencost-helm-chart \
-		--version $(OPENCOST_VERSION) -n opencost --create-namespace -f manifests/opencost/values.yaml
+		--version $(OPENCOST_VERSION) -n opencost --create-namespace -f values/opencost.yaml
 endif
 	@for repo in $(REPOS_$(EXAMPLE)); do \
 		$(KUBECTL) apply -k ../$(EXAMPLE)/$$repo || exit 1; \

@@ -71,6 +71,6 @@ make alert STATUS=resolved
 4.  In `factory/shared/cluster-connection.yaml`, set `baseHost` to your API server's hostname and `caCert` to its CA certificate.
 5.  Create a `ClusterSecretStore` named `example-secret-store` that points at your secret manager. Store the App's private key under `oncall-github-app`, the GitHub webhook secret under `oncall-github-webhook` and the Alertmanager bearer token under `oncall-alertmanager-webhook`.
 6.  Add a webhook receiver to Alertmanager with the alertmanager source's URL and the bearer token.
-7.  Install OpenCost with `opencost.mcp.enabled: true`. `quickstart/manifests/opencost/values.yaml` shows the values for a cluster without Prometheus.
+7.  Install OpenCost with `opencost.mcp.enabled: true`. `quickstart/values/opencost.yaml` shows the values for a cluster without Prometheus.
 
 See [Declarative resources](https://github.com/runkora/kora/blob/main/docs/guides/declarative-resources.md) for every kind and field, [Register a connection](https://github.com/runkora/kora/blob/main/docs/guides/register-connection.md) for the cluster connection, and [Create a trigger](https://github.com/runkora/kora/blob/main/docs/guides/create-a-trigger.md) for routing and joining runs.
