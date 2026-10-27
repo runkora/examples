@@ -15,6 +15,8 @@ The remediator can push to the deploy repository, and pushing also allows mergin
 
 ## What each agent can reach
 
+Each agent is set up with an example configuration:
+
 | Agent | Model | Cluster access | GitHub actions | Monthly budget |
 | --- | --- | --- | --- | --- |
 | `incident-triage` | `anthropic/claude-haiku-5-5` | `workloads:read`, `config:read`, `networking:read`, `cluster:read` | `read`, `issues:write` | $30 |
