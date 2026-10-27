@@ -1,0 +1,54 @@
+# The read-only ceiling for the factory's cluster connection. kora's grants on
+# each agent can only narrow it. The resources mirror the kubernetes adapter's
+# workloads, config, networking and cluster categories. Secrets are left out,
+# and the adapter denies any resource it does not classify.
+#
+# The ServiceAccount lives in the tenant namespace, in
+# ../factory/shared/cluster-connection.yaml.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kora-oncall-cluster-reader
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - replicationcontrollers
+      - configmaps
+      - services
+      - endpoints
+      - namespaces
+      - nodes
+      - events
+      - resourcequotas
+      - limitranges
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "ingressclasses", "networkpolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kora-oncall-cluster-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kora-oncall-cluster-reader
+subjects:
+  - kind: ServiceAccount
+    name: cluster-reader
+    namespace: kora-tenant-oncall

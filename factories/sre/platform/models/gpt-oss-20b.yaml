@@ -1,0 +1,18 @@
+# openai/gpt-oss-20b runs gpt-oss 20B in Ollama on your machine. It routes to
+# the quickstart's Ollama provider in quickstart/providers. To run an agent on
+# it, set the agent's model to family openai and name gpt-oss-20b.
+apiVersion: runkora.io/v1alpha1
+kind: VirtualModel
+metadata:
+  name: openai-gpt-oss-20b
+  namespace: kora-system
+spec:
+  family: openai
+  name: gpt-oss-20b
+  displayName: gpt-oss 20B (Ollama)
+  description: gpt-oss 20B running in Ollama on your machine.
+  strategy: priority
+  routes:
+    - provider: compatible:ollama
+      modelID: gpt-oss:20b
+      priority: 1

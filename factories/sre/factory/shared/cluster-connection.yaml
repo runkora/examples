@@ -1,0 +1,36 @@
+# The factory's read-only access to the cluster its alerts come from. The
+# egress gateway adds the ServiceAccount's token to each kubectl request from an
+# agent's sandbox. The ClusterRole in ../../platform/cluster-access.yaml sets
+# what the token can read.
+#
+# On your own cluster, set baseHost to the API server's hostname and caCert to
+# the cluster's CA certificate, such as from aws eks describe-cluster. On the
+# quickstart, make example fills in caCert from the cluster. See
+# https://github.com/runkora/kora/blob/main/docs/guides/register-connection.md.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-reader
+---
+# The cluster fills in the ServiceAccount's token. No token lives in git.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-reader-token
+  annotations:
+    kubernetes.io/service-account.name: cluster-reader
+type: kubernetes.io/service-account-token
+---
+apiVersion: runkora.io/v1alpha1
+kind: Connection
+metadata:
+  name: cluster
+spec:
+  adapter: kubernetes
+  baseHost: k3d-kora-quickstart-server-0:6443
+  secretRef: cluster-reader-token
+  secretKey: token
+  caCert: |
+    -----BEGIN CERTIFICATE-----
+    <the cluster's CA certificate>
+    -----END CERTIFICATE-----

@@ -1,0 +1,61 @@
+# The checkout service. It starts only when MODE is live. The ConfigMap sets
+# MODE to lvie, so the pod crash-loops and logs why.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shop
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: checkout
+  namespace: shop
+data:
+  MODE: lvie
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+  namespace: shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout
+  template:
+    metadata:
+      labels:
+        app: checkout
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: checkout
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              if [ "$MODE" != live ]; then
+                echo "checkout: unknown MODE '$MODE', expected live" >&2
+                exit 1
+              fi
+              echo "checkout: serving"
+              exec sleep infinity
+          envFrom:
+            - configMapRef:
+                name: checkout
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]

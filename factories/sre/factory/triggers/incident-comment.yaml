@@ -1,0 +1,31 @@
+# GitHub sends comments on issues and pull requests as one event. The decision
+# model sends a comment on an incident issue to the triage agent and a comment
+# on a fix to the remediator, and joins the open run for it when there is one.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: incident-comment
+spec:
+  source: github
+  eventType: issue_comment
+  match:
+    action: [created]
+    issue.user.login: ["example-sre[bot]"]
+    repository.full_name: [example-org/example-deploy]
+  senderRestriction:
+    roles: [OWNER, MEMBER, COLLABORATOR]
+  routing:
+    candidates: [incident-triage, remediator]
+    model:
+      family: typesafe
+      name: jev-1-14
+    fallback: incident-triage
+    joinRuns: true
+  promptTemplate: |
+    {{ comment.user.login }} commented. Do what the comment asks.
+
+    Repository: {{ repository.full_name }}
+    Issue or pull request: #{{ issue.number }}
+    Title: {{ issue.title }}
+    Link: {{ issue.html_url }}
+    Comment: {{ comment.body }}

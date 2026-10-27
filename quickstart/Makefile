@@ -21,7 +21,7 @@ TUNNEL_DIR := .tunnel
 # The examples make example applies. For each example: the tenants its
 # platform repository declares, its tenant repositories and the user to sign in
 # as.
-EXAMPLES := single-tenant multi-tenant factories/autofix
+EXAMPLES := single-tenant multi-tenant factories/autofix factories/sre
 TENANTS_single-tenant := example
 REPOS_single-tenant := tenant
 SIGN_IN_single-tenant := admin@local.runkora.io
@@ -31,10 +31,13 @@ SIGN_IN_multi-tenant := admin@engineering.local.runkora.io or admin@sre.local.ru
 TENANTS_factories/autofix := autofix
 REPOS_factories/autofix := factory
 SIGN_IN_factories/autofix := admin@autofix.local.runkora.io
+TENANTS_factories/sre := oncall
+REPOS_factories/sre := factory
+SIGN_IN_factories/sre := admin@oncall.local.runkora.io
 
 # The webhook signing secrets the examples' trigger sources read, one per
 # tenant and provider. make credentials generates each one.
-WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook
+WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook oncall-github-webhook oncall-alertmanager-webhook
 
 # The credentials you fill in from .env.example. The install runs without the
 # file, and make credentials skips each value that is not set.
@@ -50,7 +53,7 @@ define apply
 $(KUBECTL) -n $(1) create $(2) --dry-run=client -o yaml | $(KUBECTL) apply -f -
 endef
 
-.PHONY: up tools cluster namespaces secrets istio spire data dex eso kora credentials providers example check-example apply-example ask-tunnel tunnel tunnel-stop status down clean
+.PHONY: up tools cluster namespaces secrets istio spire data dex eso kora credentials providers example check-example apply-example ask-tunnel tunnel tunnel-stop alert status down clean
 
 up: tools cluster namespaces secrets istio spire data dex eso kora credentials providers example ask-tunnel
 
@@ -184,9 +187,10 @@ credentials: $(addprefix $(SECRETS)/,$(WEBHOOK_SECRETS))
 		$(call apply,kora-credentials,secret generic sre-exa --from-literal=apiKey="$$EXA_API_KEY"); \
 	fi
 	@if [ -n "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
-		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app and autofix-github-app in kora-credentials"; \
+		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app, autofix-github-app and oncall-github-app in kora-credentials"; \
 		$(call apply,kora-credentials,secret generic engineering-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 		$(call apply,kora-credentials,secret generic autofix-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
+		$(call apply,kora-credentials,secret generic oncall-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 	fi
 	@for name in $(WEBHOOK_SECRETS); do \
 		echo "$(SECRETS)/$$name -> Secret $$name in kora-credentials"; \
@@ -213,9 +217,10 @@ example:
 		echo "  1) single-tenant  One tenant with one agent. Needs a model provider only."; \
 		echo "  2) multi-tenant   Two teams with four use cases. Also needs an Exa key and a GitHub App."; \
 		echo "  3) autofix        A factory that finds, verifies and fixes bugs. Needs a GitHub App and a repository."; \
-		echo "  4) none           Apply one later with make example."; \
-		printf "Choose 1, 2, 3 or 4 [1]: "; read choice; \
-		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=none;; *) example=single-tenant;; esac; \
+		echo "  4) sre            A factory that triages alerts and proposes fixes. Needs a GitHub App and a repository."; \
+		echo "  5) none           Apply one later with make example."; \
+		printf "Choose 1, 2, 3, 4 or 5 [1]: "; read choice; \
+		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=factories/sre;; 5) example=none;; *) example=single-tenant;; esac; \
 	fi; \
 	[ "$${example:-single-tenant}" = none ] || $(MAKE) --no-print-directory apply-example EXAMPLE=$${example:-single-tenant}
 
@@ -253,6 +258,21 @@ ifeq ($(EXAMPLE),factories/autofix)
 		echo "See factories/autofix/README.md. Then run make credentials example EXAMPLE=factories/autofix."; exit 1; \
 	fi
 endif
+ifeq ($(EXAMPLE),factories/sre)
+	@missing=0; \
+	if [ ! -f "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
+		echo "sre: set GITHUB_APP_PRIVATE_KEY_FILE in quickstart/.env to your GitHub App's private key file."; missing=1; \
+	fi; \
+	if grep -q 'owner: example-org' ../factories/sre/factory/shared/github-connection.yaml; then \
+		echo "sre: set app_id, installation_id and owner in factories/sre/factory/shared/github-connection.yaml."; missing=1; \
+	fi; \
+	if grep -rqF -e 'example-org/example-deploy' -e 'example-sre[bot]' ../factories/sre/factory/triggers; then \
+		echo "sre: replace example-org/example-deploy and example-sre[bot] in factories/sre/factory/triggers with your deploy repository and your App's bot user."; missing=1; \
+	fi; \
+	if [ $$missing = 1 ]; then \
+		echo "See factories/sre/README.md. Then run make credentials example EXAMPLE=factories/sre."; exit 1; \
+	fi
+endif
 
 # Applies an example: its platform repository first, then each tenant
 # repository once the operator has created the tenant's namespace.
@@ -266,9 +286,20 @@ apply-example: check-example
 			sleep 2; \
 		done; \
 	done
+ifeq ($(EXAMPLE),factories/sre)
+	$(HELM_INSTALL) opencost opencost --repo https://opencost.github.io/opencost-helm-chart \
+		--version $(OPENCOST_VERSION) -n opencost --create-namespace -f values/opencost.yaml
+endif
 	@for repo in $(REPOS_$(EXAMPLE)); do \
 		$(KUBECTL) apply -k ../$(EXAMPLE)/$$repo || exit 1; \
 	done
+ifeq ($(EXAMPLE),factories/sre)
+	@echo "Setting the cluster connection's caCert to this cluster's CA"
+	@{ printf 'spec:\n  caCert: |\n'; \
+		$(KUBECTL) -n kora-tenant-oncall get configmap kube-root-ca.crt -o jsonpath='{.data.ca\.crt}' | sed 's/^/    /'; \
+	} | $(KUBECTL) -n kora-tenant-oncall patch connection cluster --type merge --patch-file /dev/stdin
+	$(KUBECTL) apply -k ../factories/sre/demo
+endif
 	@echo
 	@echo "$(EXAMPLE) is running."
 	@echo "  Console:  https://local.runkora.io:9443"
@@ -327,6 +358,19 @@ tunnel: tunnel-stop
 # Stops the webhook tunnel.
 tunnel-stop:
 	@if [ -f $(TUNNEL_DIR)/pid ]; then kill $$(cat $(TUNNEL_DIR)/pid) 2>/dev/null || true; rm -f $(TUNNEL_DIR)/pid $(TUNNEL_DIR)/url; fi
+
+# Posts the alert Alertmanager would send for the sre example's crash-looping
+# checkout pod. STATUS=resolved posts the resolution. The alert reaches kora on
+# localhost and needs no tunnel.
+STATUS ?= firing
+alert:
+	@path=$$($(KUBECTL) -n kora-tenant-oncall get triggersource alertmanager -o jsonpath='{.status.webhookPath}'); \
+	[ -n "$$path" ] || { echo "The sre example's alertmanager source is not ready. Run make example EXAMPLE=factories/sre."; exit 1; }; \
+	now=$$(date -u +%Y-%m-%dT%H:%M:%SZ); \
+	printf '%s' '{"version":"4","status":"$(STATUS)","receiver":"kora","groupKey":"{}:{alertname=\"KubePodCrashLooping\", namespace=\"shop\"}","truncatedAlerts":0,"groupLabels":{"alertname":"KubePodCrashLooping","namespace":"shop"},"commonLabels":{"alertname":"KubePodCrashLooping","namespace":"shop","deployment":"checkout","severity":"critical"},"commonAnnotations":{"summary":"checkout is crash-looping in shop","description":"A checkout pod in shop restarted more than three times in the last ten minutes."},"externalURL":"http://alertmanager.local","alerts":[{"status":"$(STATUS)","labels":{"alertname":"KubePodCrashLooping","namespace":"shop","deployment":"checkout","severity":"critical"},"annotations":{"summary":"checkout is crash-looping in shop"},"startsAt":"'"$$now"'","endsAt":"0001-01-01T00:00:00Z","generatorURL":"http://prometheus.local/graph","fingerprint":"5f1c0a6e2b7d9c31"}]}' | \
+	curl -sS --fail-with-body --resolve api.local.runkora.io:9443:127.0.0.1 --cacert "$$(mkcert -CAROOT)/rootCA.pem" \
+		-H "Authorization: Bearer $$(cat $(SECRETS)/oncall-alertmanager-webhook)" -H 'Content-Type: application/json' \
+		--data-binary @- "https://api.local.runkora.io:9443$$path" && echo && echo "Posted a $(STATUS) KubePodCrashLooping alert for shop/checkout."
 
 # Deletes the cluster. The next make up reuses the files in .secrets.
 down: tunnel-stop

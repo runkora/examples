@@ -15,6 +15,8 @@
 #   oncall@sre.local.runkora.io            multi-tenant    sre, kora-viewer
 #   admin@autofix.local.runkora.io         autofix         platform-admin
 #   maintainer@autofix.local.runkora.io    autofix         maintainer
+#   admin@oncall.local.runkora.io          sre             platform-admin
+#   sre@oncall.local.runkora.io            sre             sre
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -120,6 +122,26 @@ data:
       uidnumber = 1008
       primarygroup = 1100
       othergroups = [5006]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "oncall-admin"
+      givenname = "Admin"
+      sn = "User"
+      mail = "admin@oncall.local.runkora.io"
+      uidnumber = 1009
+      primarygroup = 1100
+      othergroups = [5001]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "oncall-sre"
+      givenname = "SRE"
+      sn = "User"
+      mail = "sre@oncall.local.runkora.io"
+      uidnumber = 1010
+      primarygroup = 1100
+      othergroups = [5005]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[groups]]

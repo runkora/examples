@@ -16,7 +16,7 @@ KORA_CRDS_CHART ?= $(KORA_CHARTS)/kora-crds --version $(KORA_VERSION)
 SCHEMAS := .schemas
 
 # The kustomizations make validate builds, one per example repository.
-KUSTOMIZATIONS := single-tenant/platform single-tenant/tenant multi-tenant/platform multi-tenant/engineering multi-tenant/sre factories/autofix/platform factories/autofix/factory
+KUSTOMIZATIONS := single-tenant/platform single-tenant/tenant multi-tenant/platform multi-tenant/engineering multi-tenant/sre factories/autofix/platform factories/autofix/factory factories/sre/platform factories/sre/factory factories/sre/demo
 
 KUBECONFORM := kubeconform -strict -summary \
 	-schema-location default \

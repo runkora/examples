@@ -1,0 +1,88 @@
+# OpenCost's MCP server. OpenCost runs in the opencost namespace and serves MCP
+# on port 8081. The tool gateway only reaches tenant namespaces, so a TCP relay
+# here fronts the opencost Service. Each tool becomes the scope
+# mcp:opencost:<tool>:use.
+#
+# The MCPServer comes before the relay. kora reads it to admit the relay's pod
+# as an MCP server. A pod admitted first is treated as an agent pod and never
+# becomes ready.
+apiVersion: runkora.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: opencost
+spec:
+  displayName: OpenCost
+  description: Cluster cost allocation by namespace, workload and label, node and disk asset costs, and CPU and memory rightsizing.
+  endpoint: http://opencost-mcp.kora-tenant-oncall.svc:8000/mcp
+  transport: streamable-http
+  reintrospectIntervalSeconds: 300
+  workload:
+    selector:
+      app: opencost-mcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opencost-mcp
+  labels:
+    app: opencost-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opencost-mcp
+  template:
+    metadata:
+      labels:
+        app: opencost-mcp
+    spec:
+      # Tenant namespaces enforce the restricted Pod Security profile.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: relay
+          image: alpine/socat:1.8.1.3@sha256:22d77becaeeea8ef56b8c4bb2312323acafe85354be6a85714ff5050e3537842
+          args:
+            - "TCP-LISTEN:8000,fork,reuseaddr"
+            - "TCP:opencost.opencost.svc.cluster.local:8081"
+          ports:
+            - name: mcp
+              containerPort: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencost-mcp
+  labels:
+    app: opencost-mcp
+spec:
+  selector:
+    app: opencost-mcp
+  ports:
+    # Istio reads the protocol from the port name. An unrecognised name is
+    # treated as plain TCP, and introspection fails.
+    - name: http
+      appProtocol: http
+      port: 8000
+      targetPort: 8000

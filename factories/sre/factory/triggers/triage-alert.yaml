@@ -1,0 +1,30 @@
+# Alerts in the same group within a minute start one run. A later notification
+# for the group joins the open run when there is one.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: triage-alert
+spec:
+  source: alertmanager
+  eventType: alert.firing
+  coalesce:
+    key: "{{ groupKey }}"
+    windowSeconds: 60
+  routing:
+    candidates: [incident-triage]
+    model:
+      family: typesafe
+      name: jev-1-14
+    fallback: incident-triage
+    joinRuns: true
+  promptTemplate: |
+    An alert is firing. Triage it.
+
+    Incident repository: example-org/example-deploy
+    Alert group: {{ groupKey }}
+    Alert: {{ commonLabels.alertname }}
+    Namespace: {{ commonLabels.namespace }}
+    Severity: {{ commonLabels.severity }}
+    Summary: {{ commonAnnotations.summary }}
+    Description: {{ commonAnnotations.description }}
+    Source: {{ alerts.0.generatorURL }}

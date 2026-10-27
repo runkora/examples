@@ -1,0 +1,11 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: sweep-weekly
+spec:
+  kind: scheduled
+  agent: cost-sweeper
+  schedule:
+    cronExpression: "0 9 * * 1"
+    timezone: UTC
+  promptTemplate: "Sweep the cluster's costs and report in example-org/example-deploy. Today is {{ var.date }}."
