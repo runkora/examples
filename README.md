@@ -12,7 +12,7 @@ make up
 
 See [`quickstart`](quickstart) for the prerequisites and the install stages.
 
-A coding agent can also run the quickstart. Ask it to set up runkora from this repository, and it follows [`.claude/skills/runkora-quickstart/SKILL.md`](.claude/skills/runkora-quickstart/SKILL.md).
+A coding agent can also run the quickstart. Ask it to set up runkora from this repository, and it follows [`.agents/skills/runkora-quickstart/SKILL.md`](.agents/skills/runkora-quickstart/SKILL.md).
 
 ## Examples
 
