@@ -1,98 +1,103 @@
 ---
 name: runkora-quickstart
-description: Install runkora on a local k3d cluster from this repository and run one of its examples, from the prerequisites to a signed-in console with a run to watch. Use when asked to "set up runkora", "install the runkora examples", "demo runkora locally", "run the quickstart" or "try kora on my machine".
+description: Install runkora on a local k3d cluster from this repository and run one of its examples. Use when asked to "set up runkora", "install the runkora examples", "demo runkora locally", "run the quickstart" or "try kora on my machine".
 ---
 
 # runkora quickstart
 
-This skill takes a person from a fresh clone of this repository to a running runkora demo on a local k3d cluster. `quickstart/README.md` and each example's README are the source of truth. Each step below cites the README section that holds the detail. Read that section before you act on the step. Paths are relative to the repository root, and every `make` command runs from the root.
+The quickstart installs runkora on a local k3d cluster and applies one example. `quickstart/README.md` and each example's README hold the detail. Where this file and a README disagree, follow the README. Run every `make` command from the repository root.
 
 ## Rules
 
-Apply these rules at every step:
-
-*   **Secrets:** Do **not** ask for, print or echo an API key, a private key or a webhook signing secret. The person writes each value into `quickstart/.env` themselves. Do not read `quickstart/.env`, `quickstart/.secrets/` or a `.pem` file. Check that a value is set with `grep -c '^OPENROUTER_API_KEY=.' quickstart/.env` and report only the count.
-*   **sudo:** Do not run `sudo`. When a step needs it, give the person the command to run in their own terminal and wait for them.
-*   **Accounts:** Do not create accounts, API keys, GitHub Apps or webhooks for the person. Give the link and the exact settings, and wait for the person to confirm each one. Ask before you push to any repository.
-*   **Installs:** Ask before you install a tool. List each tool and the install command first.
-*   **README first:** If this file and a README disagree, follow the README.
+- **Secrets:** Never ask for, read or print an API key, private key or signing secret. The person writes them into `quickstart/.env`. To check a value is set, count the line, such as `grep -c '^OPENROUTER_API_KEY=.' quickstart/.env`.
+- **sudo:** Never run `sudo`. Give the person the command to run in their own terminal.
+- **Accounts:** Never create accounts, API keys, GitHub Apps or webhooks. Give the person the link and the settings, and wait for them.
+- **Installs:** Ask before installing a tool.
 
 ## 1. Choose the demo
 
-Ask the person what they want to see demoed. Offer these outcomes and map the answer to an example:
+Ask what the person wants to see, and pick the example from the answer.
 
-*   **One agent under policy and a budget:** `single-tenant` declares one tenant with an agent that summarises pull requests.
-*   **Teams kept apart:** `multi-tenant` gives an engineering team and an SRE team separate tenants with their own agents, access and budgets.
-*   **A bug-fixing factory:** `factories/autofix` runs four agents that find, verify and fix problems in a GitHub repository and hand a person the pull request.
-*   **Alert triage and cost sweeps:** `factories/sre` runs agents that triage alerts in the cluster, sweep its costs with OpenCost and propose fixes as pull requests.
-*   **Not sure:** Recommend `single-tenant`. It has the fewest steps and needs only a model provider.
+| They want to see | Example |
+| --- | --- |
+| One agent running under policy and a budget | `single-tenant` |
+| Two teams, each with its own agents, access and budgets | `multi-tenant` |
+| A factory of agents that finds, verifies and fixes bugs and opens a pull request | `factories/autofix` |
+| Agents that triage alerts and sweep the cluster's costs | `factories/sre` |
 
-## 2. State what the demo needs
+If they are unsure, recommend `single-tenant`. It is the only example that needs nothing beyond a model provider.
 
-Before you install anything, tell the person what the example needs beyond the base install:
+## 2. Tell them what it needs
 
-*   **`single-tenant`:** A model provider.
-*   **`multi-tenant`:** OpenRouter, an Exa API key and a GitHub App installed on an organisation. See `multi-tenant/README.md#prerequisites`.
-*   **`factories/autofix`:** OpenRouter, a GitHub App and a repository the App is installed on. See `factories/autofix/README.md#set-it-up`.
-*   **`factories/sre`:** OpenRouter, a GitHub App and a deploy repository that holds the contents of `factories/sre/demo/`. See `factories/sre/README.md#set-it-up`.
+Tell the person what the example needs before installing anything.
 
-The routed triggers in `multi-tenant`, `autofix` and `sre` pick an agent with the decision model `typesafe/jev-1-14` on OpenRouter. These three examples also need `cloudflared` for the webhook tunnel.
+| Example | Needs | Set-up section |
+| --- | --- | --- |
+| `single-tenant` | A model provider | |
+| `multi-tenant` | OpenRouter, an Exa API key and a GitHub App on an organisation | `multi-tenant/README.md#prerequisites` |
+| `factories/autofix` | OpenRouter, a GitHub App and a repository it is installed on | `factories/autofix/README.md#set-it-up` |
+| `factories/sre` | OpenRouter, a GitHub App and a deploy repository holding `factories/sre/demo/` | `factories/sre/README.md#set-it-up` |
 
-For an example with a GitHub App, give the person these web steps and wait after each one:
+`multi-tenant`, `autofix` and `sre` route triggers with `typesafe/jev-1-14` on OpenRouter, and receive webhooks through `cloudflared`.
 
-1.  **Create the App:** Open `https://github.com/settings/apps/new`, or `https://github.com/organizations/<org>/settings/apps/new` for an organisation. The `autofix` and `sre` factories need read and write access to contents, issues and pull requests. In `multi-tenant`, `code-reviewer` reads the repository and posts reviews with `pulls:write`.
-2.  **Install the App:** Install it on the organisation or the repository, and generate a private key. GitHub downloads a `.pem` file. The person sets `GITHUB_APP_PRIVATE_KEY_FILE` to its absolute path in step 4.
-3.  **Fill in the connection:** Ask for the App ID, the installation ID and the owner. None of them is a secret. The installation ID is the number at the end of the installation's settings URL. Set `app_id`, `installation_id` and `owner` in the example's connection file:
-    *   `multi-tenant/engineering/shared/connections/github.yaml`
-    *   `factories/autofix/factory/shared/github-connection.yaml`
-    *   `factories/sre/factory/shared/github-connection.yaml`
-4.  **Point the triggers at the repository:** In every file in the factory's `factory/triggers/`, replace the repository and the bot user with the person's repository and `<app-slug>[bot]`. `autofix` uses `example-org/example-repo` and `example-autofix[bot]`, and `sre` uses `example-org/example-deploy` and `example-sre[bot]`.
+A GitHub App takes four steps. Wait for the person after each one.
+
+1. **Create the App:** Open `https://github.com/settings/apps/new`, or `https://github.com/organizations/<org>/settings/apps/new` for an organisation. Clear **Webhook › Active**. The examples receive webhooks from the repository or organisation instead. `autofix` and `sre` need read and write access to contents, issues and pull requests. `multi-tenant` needs read access to contents and write access to pull requests.
+2. **Install the App:** Install it on the repository or organisation and generate a private key. The person sets `GITHUB_APP_PRIVATE_KEY_FILE` in `quickstart/.env` to the `.pem` file's absolute path.
+3. **Fill in the connection:** Ask for the App ID, the installation ID and the owner. None of them is secret. The installation ID is the number at the end of the installation's settings URL. Set `app_id`, `installation_id` and `owner` in the example's connection file:
+   - `multi-tenant/engineering/shared/connections/github.yaml`
+   - `factories/autofix/factory/shared/github-connection.yaml`
+   - `factories/sre/factory/shared/github-connection.yaml`
+4. **Point the triggers at the repository:** In `factory/triggers/`, replace the placeholder repository and bot with the person's repository and `<app-slug>[bot]`. The placeholders are `example-org/example-repo` and `example-autofix[bot]` in `autofix`, and `example-org/example-deploy` and `example-sre[bot]` in `sre`.
 
 ## 3. Check the prerequisites
 
-See `quickstart/README.md#prerequisites`. Run these checks and report one list of what is present and what is missing:
+Check each prerequisite in `quickstart/README.md#prerequisites` and report what is missing in one list.
 
-*   **Docker:** Run `docker info --format '{{.NCPU}} {{.MemTotal}}'`. The Docker Desktop or Colima VM needs at least 4 CPUs and 8 GiB of memory. On Colima, the person resizes the VM with `colima stop` and `colima start --cpu 4 --memory 8`.
-*   **Ports:** Run `lsof -nP -iTCP:9443 -iTCP:9880 -iTCP:5557 -sTCP:LISTEN`. Any line of output is a process that holds a port the cluster needs.
-*   **Tools:** Run `command -v` for `k3d`, `kubectl`, `helm`, `mkcert`, `openssl` and `make`. Add `cloudflared` for an example that needs the tunnel, and `ollama` if the person chooses Ollama.
+| Check | Command | Passes when |
+| --- | --- | --- |
+| Docker resources | `docker info --format '{{.NCPU}} {{.MemTotal}}'` | At least 4 CPUs and 8 GiB |
+| Ports | `lsof -nP -iTCP:9443 -iTCP:9880 -iTCP:5557 -sTCP:LISTEN` | No output |
+| Tools | `command -v k3d kubectl helm mkcert openssl make` | Every tool found |
 
-On macOS, install the missing tools with `brew install k3d kubectl helm mkcert`, and `cloudflared` with `brew install cloudflared`. On another OS, point the person at each tool's install docs.
+Webhook examples also need `cloudflared`, and Ollama needs `ollama`. On macOS, install the tools with `brew install k3d kubectl helm mkcert cloudflared`, and resize a Colima VM with `colima stop` and `colima start --cpu 4 --memory 8`.
 
 ## 4. Set up the model provider
 
-See `quickstart/README.md#choose-a-model-provider`. Ask whether to use OpenRouter or Ollama, and state the trade-off:
+Ask whether to use OpenRouter or Ollama. `quickstart/README.md#choose-a-model-provider` covers both.
 
-*   **OpenRouter:** OpenRouter serves hosted models that work well with kora's agent harnesses and bills per token. Models with a `:free` suffix cost nothing and are rate-limited.
-*   **Ollama:** Ollama runs a model on the person's machine with no account and no cost. Local models are weaker at tool calling, and the person should expect loops, invented tool calls and ignored instructions. Offer Ollama for `single-tenant` only.
+- **OpenRouter** serves hosted models and bills per token. Models with a `:free` suffix cost nothing and are rate-limited.
+- **Ollama** runs a model on the person's machine at no cost. Local models are weaker at tool calling. Offer it for `single-tenant` only. The other examples route triggers with a model on OpenRouter.
 
-Set up the provider:
+Run `cp quickstart/.env.example quickstart/.env` if `quickstart/.env` does not exist. Then:
 
-1.  Run `cp quickstart/.env.example quickstart/.env` if `quickstart/.env` does not exist.
-2.  For OpenRouter, the person creates a key at `https://openrouter.ai/keys` and writes it after `OPENROUTER_API_KEY=` in `quickstart/.env` without quotes. Uncomment the resource in `quickstart/providers/openrouter.yaml`: remove the leading `# ` from every line from `# apiVersion:` to the end of the file.
-3.  For Ollama, the person installs Ollama and runs `ollama pull gpt-oss:20b`. Uncomment the resource in `quickstart/providers/ollama.yaml` the same way. In `single-tenant/tenant/agent.yaml`, set `model` to family `openai` and name `gpt-oss-20b`.
-4.  For `multi-tenant`, the person writes `EXA_API_KEY` in `quickstart/.env`. For an example with a GitHub App, the person writes `GITHUB_APP_PRIVATE_KEY_FILE`.
-5.  Run `make check-example EXAMPLE=<example>`. It lists anything the example still needs and prints no values.
+- **OpenRouter:** The person creates a key at `https://openrouter.ai/keys` and sets `OPENROUTER_API_KEY` in `quickstart/.env`. Uncomment the resource in `quickstart/providers/openrouter.yaml`.
+- **Ollama:** The person installs Ollama and runs `ollama pull gpt-oss:20b`. Uncomment the resource in `quickstart/providers/ollama.yaml`. In `single-tenant/tenant/agent.yaml`, set the model to family `openai` and name `gpt-oss-20b`.
+- **`multi-tenant`** also needs `EXA_API_KEY` in `quickstart/.env`.
+
+Run `make check-example EXAMPLE=<example>`. It lists what the example still needs without printing any value.
 
 ## 5. Install
 
-See `quickstart/README.md#install-kora` and `quickstart/README.md#install-stages`.
+`mkcert -install` asks for the system password the first time. Have the person run it in their own terminal before the install.
 
-1.  **Trust the local CA:** The `mkcert -install` in `make secrets` asks for the system password the first time. Warn the person, and ask them to run `mkcert -install` in their own terminal before the install.
-2.  **Run the install:** Run `make up EXAMPLE=<example> TUNNEL=no` for `single-tenant` and `make up EXAMPLE=<example> TUNNEL=yes` for the others. The install takes several minutes. Run it in the background or with a long timeout, and report each stage as it finishes.
-3.  **Handle a failure:** Read the error and find the stage that failed. The stages run in this order: `cluster`, `namespaces`, `secrets`, `istio`, `spire`, `data`, `dex`, `eso`, `kora`, `credentials`, `providers`, `example`, `ask-tunnel`. Fix the cause and rerun the failed stage on its own, such as `make kora`. When it passes, run the stages after it in one command, such as `make credentials providers example EXAMPLE=<example>`. Do not rerun `make up` or run `make clean` to recover from one failed stage.
-    *   Inspect the cluster with `make status` and `kubectl --context k3d-kora-quickstart get pods -A`.
-    *   If `make example` lists missing values, fix them and run `make credentials example EXAMPLE=<example>`.
-    *   If `make providers` reports that no model provider is enabled, uncomment the provider file and run `make providers`.
+Run `make up EXAMPLE=<example> TUNNEL=no` for `single-tenant`, and `make up EXAMPLE=<example> TUNNEL=yes` for the others. Report each stage as it finishes, because the install takes several minutes.
+
+`make up` runs these stages in order: `tools`, `cluster`, `namespaces`, `secrets`, `istio`, `spire`, `data`, `dex`, `eso`, `kora`, `credentials`, `providers`, `example`, `ask-tunnel`. `quickstart/README.md#install-stages` describes each one. When a stage fails, fix the cause and rerun that stage, such as `make kora`. Then run the stages after it in one command, such as `make credentials providers example EXAMPLE=<example>`. Do not rerun `make up` or run `make clean` to recover from one failed stage.
+
+- `make status` and `kubectl --context k3d-kora-quickstart get pods -A` show the state of the cluster.
+- When `make example` lists missing values, set them and run `make credentials example EXAMPLE=<example>`.
+- When `make providers` finds no provider, uncomment the provider file and rerun `make providers`.
 
 ## 6. See it working
 
-Open `https://local.runkora.io:9443` and sign in with the user for the example and the password `password`. See `quickstart/README.md#users` for every user and group.
+Open `https://local.runkora.io:9443` and sign in with the password `password`. `quickstart/README.md#users` lists every user.
 
-*   **`single-tenant`:** Sign in as `admin@local.runkora.io`. Open the `summarise-pr` trigger and fire it with a public pull request URL, such as `https://github.com/runkora/kora/pull/1`. The `pr-summariser` run appears in the console. `engineer@local.runkora.io` sees the same agent with the narrower `engineer` role.
-*   **`multi-tenant`:** Sign in as `admin@engineering.local.runkora.io`, then as `admin@sre.local.runkora.io`. Each admin sees only their own tenant. To see `code-reviewer` run, add an organisation webhook with the URL and secret that `make tunnel` prints for `kora-tenant-engineering/github-org`, select the pull request event, and open a pull request.
-*   **`factories/autofix`:** Sign in as `admin@autofix.local.runkora.io`. The person adds a repository webhook with the URL and secret that `make tunnel` prints, and selects the issues, issue comments, pull requests, pull request reviews and workflow runs events. `bug-hunter` runs every morning at 09:00 UTC. To start the loop sooner, open an issue in the repository for `bug-verifier` to check. See `factories/autofix/README.md#how-the-factory-works`.
-*   **`factories/sre`:** Sign in as `admin@oncall.local.runkora.io`. The person adds a repository webhook with the URL and secret that `make tunnel` prints, and selects the issues, issue comments and pull request reviews events. Run `make alert` to post the alert for the crash-looping `checkout` pod. See `factories/sre/README.md#fire-an-alert-on-the-quickstart` to resolve it.
+- **`single-tenant`:** Sign in as `admin@local.runkora.io` and fire the `summarise-pr` trigger with a public pull request URL, such as `https://github.com/runkora/kora/pull/1`. `engineer@local.runkora.io` sees the same agent under the narrower `engineer` role.
+- **`multi-tenant`:** Sign in as `admin@engineering.local.runkora.io`, then as `admin@sre.local.runkora.io`. Each admin sees only their own tenant. To run `code-reviewer`, add an organisation webhook for `kora-tenant-engineering/github-org` with the pull request event, then open a pull request.
+- **`factories/autofix`:** Sign in as `admin@autofix.local.runkora.io`. Add a repository webhook with the issues, issue comment, pull request, pull request review and workflow run events, then open an issue for `bug-verifier` to check. `bug-hunter` also runs every morning at 09:00 UTC.
+- **`factories/sre`:** Sign in as `admin@oncall.local.runkora.io`. Add a repository webhook with the issues, issue comment and pull request review events, then run `make alert` to raise the alert for the crash-looping `checkout` pod.
 
-`make tunnel` prints a `kubectl` command for each source's signing secret. Do not run that command yourself. The person runs it in their own terminal and pastes the value into the GitHub webhook settings. A quick tunnel gets a new URL each time it starts, and the person updates the webhook after each `make tunnel`. See `quickstart/README.md#receive-webhooks-locally`.
+`make tunnel` prints each webhook's URL and the `kubectl` command that reads its signing secret. The person runs that command and enters both values in GitHub. A quick tunnel gets a new URL each time it starts, and the webhook needs the new URL after each `make tunnel`. `quickstart/README.md#receive-webhooks-locally` covers the tunnel.
 
-When the person is done, `make tunnel-stop` stops the tunnel, `make down` deletes the cluster and `make clean` also deletes `quickstart/.secrets/`.
+`make tunnel-stop` stops the tunnel. `make down` deletes the cluster, and `make clean` also deletes `quickstart/.secrets/`.
