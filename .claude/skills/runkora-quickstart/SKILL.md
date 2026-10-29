@@ -81,7 +81,7 @@ Run `make check-example EXAMPLE=<example>`. It lists what the example still need
 
 `mkcert -install` asks for the system password the first time. Have the person run it in their own terminal before the install.
 
-Run `make up EXAMPLE=<example> TUNNEL=no` for `single-tenant`, and `make up EXAMPLE=<example> TUNNEL=yes` for the others. Report each stage as it finishes, because the install takes several minutes.
+Run `make up EXAMPLE=<example> TUNNEL=no` for `single-tenant`, and `make up EXAMPLE=<example> TUNNEL=yes` for the others. The install takes several minutes. Report each stage as it finishes.
 
 `make up` runs these stages in order: `tools`, `cluster`, `namespaces`, `secrets`, `istio`, `spire`, `data`, `dex`, `eso`, `kora`, `credentials`, `providers`, `example`, `ask-tunnel`. `quickstart/README.md#install-stages` describes each one. When a stage fails, fix the cause and rerun that stage, such as `make kora`. Then run the stages after it in one command, such as `make credentials providers example EXAMPLE=<example>`. Do not rerun `make up` or run `make clean` to recover from one failed stage.
 
