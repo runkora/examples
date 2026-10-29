@@ -12,6 +12,8 @@ make up
 
 See [`quickstart`](quickstart) for the prerequisites and the install stages.
 
+A coding agent can also run the quickstart for you. Ask it to set up runkora from this repository, and it follows the procedure in [`.claude/skills/runkora-quickstart/SKILL.md`](.claude/skills/runkora-quickstart/SKILL.md).
+
 ## Examples
 
 An example is a set of Kubernetes manifests that declare tenants, models, agents, triggers and roles for kora. Choose one when `make up` asks, or apply one later with `make example EXAMPLE=<name>`:
