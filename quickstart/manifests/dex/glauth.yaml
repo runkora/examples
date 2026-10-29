@@ -2,23 +2,23 @@
 # kora reads a person's roles from the groups claim in their ID token. Dex's
 # built-in password database has no groups. Dex reads its users from glauth.
 #
-# kora routes a person to a tenant by the domain of their email. Each example
-# in ../single-tenant, ../multi-tenant and ../factories declares the tenants
-# these domains belong to.
+# Every tenant in the examples claims the local.runkora.io domain and binds to
+# one tenant group in the groups claim. kora signs a person in to the tenant
+# whose group they are in. Each user is in exactly one tenant group.
 #
 # Every user has the password "password" (passsha256 is its SHA-256).
-#   admin@local.runkora.io                 single-tenant   platform-admin, engineer
-#   engineer@local.runkora.io              single-tenant   engineer, kora-viewer
-#   admin@engineering.local.runkora.io     multi-tenant    platform-admin
-#   dev@engineering.local.runkora.io       multi-tenant    reviewer, kora-viewer
-#   admin@sre.local.runkora.io             multi-tenant    platform-admin
-#   oncall@sre.local.runkora.io            multi-tenant    sre, kora-viewer
-#   admin@autofix.local.runkora.io         autofix         platform-admin
-#   maintainer@autofix.local.runkora.io    autofix         maintainer
-#   admin@oncall.local.runkora.io          sre             platform-admin
-#   sre@oncall.local.runkora.io            sre             sre
-#   admin@feature.local.runkora.io         feature         platform-admin
-#   maintainer@feature.local.runkora.io    feature         maintainer
+#   admin@local.runkora.io                 example       platform-admin, engineer
+#   engineer@local.runkora.io              example       engineer, kora-viewer
+#   engineering-admin@local.runkora.io     engineering   platform-admin
+#   engineering-dev@local.runkora.io       engineering   reviewer, kora-viewer
+#   sre-admin@local.runkora.io             sre           platform-admin
+#   sre-oncall@local.runkora.io            sre           sre, kora-viewer
+#   autofix-admin@local.runkora.io         autofix       platform-admin
+#   autofix-maintainer@local.runkora.io    autofix       maintainer
+#   oncall-admin@local.runkora.io          oncall        platform-admin
+#   oncall-sre@local.runkora.io            oncall        sre
+#   feature-admin@local.runkora.io         feature       platform-admin
+#   feature-maintainer@local.runkora.io    feature       maintainer
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -53,7 +53,7 @@ data:
       mail = "admin@local.runkora.io"
       uidnumber = 1001
       primarygroup = 1100
-      othergroups = [5001, 5003]
+      othergroups = [5101, 5001, 5003]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
@@ -63,107 +63,107 @@ data:
       mail = "engineer@local.runkora.io"
       uidnumber = 1002
       primarygroup = 1100
-      othergroups = [5003, 5002]
+      othergroups = [5101, 5003, 5002]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "engineering-admin"
       givenname = "Admin"
       sn = "User"
-      mail = "admin@engineering.local.runkora.io"
+      mail = "engineering-admin@local.runkora.io"
       uidnumber = 1003
       primarygroup = 1100
-      othergroups = [5001]
+      othergroups = [5102, 5001]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "engineering-dev"
       givenname = "Dev"
       sn = "User"
-      mail = "dev@engineering.local.runkora.io"
+      mail = "engineering-dev@local.runkora.io"
       uidnumber = 1004
       primarygroup = 1100
-      othergroups = [5004, 5002]
+      othergroups = [5102, 5004, 5002]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "sre-admin"
       givenname = "Admin"
       sn = "User"
-      mail = "admin@sre.local.runkora.io"
+      mail = "sre-admin@local.runkora.io"
       uidnumber = 1005
       primarygroup = 1100
-      othergroups = [5001]
+      othergroups = [5103, 5001]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "sre-oncall"
       givenname = "Oncall"
       sn = "User"
-      mail = "oncall@sre.local.runkora.io"
+      mail = "sre-oncall@local.runkora.io"
       uidnumber = 1006
       primarygroup = 1100
-      othergroups = [5005, 5002]
+      othergroups = [5103, 5005, 5002]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "autofix-admin"
       givenname = "Admin"
       sn = "User"
-      mail = "admin@autofix.local.runkora.io"
+      mail = "autofix-admin@local.runkora.io"
       uidnumber = 1007
       primarygroup = 1100
-      othergroups = [5001]
+      othergroups = [5104, 5001]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "autofix-maintainer"
       givenname = "Maintainer"
       sn = "User"
-      mail = "maintainer@autofix.local.runkora.io"
+      mail = "autofix-maintainer@local.runkora.io"
       uidnumber = 1008
       primarygroup = 1100
-      othergroups = [5006]
+      othergroups = [5104, 5006]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "oncall-admin"
       givenname = "Admin"
       sn = "User"
-      mail = "admin@oncall.local.runkora.io"
+      mail = "oncall-admin@local.runkora.io"
       uidnumber = 1009
       primarygroup = 1100
-      othergroups = [5001]
+      othergroups = [5105, 5001]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "oncall-sre"
       givenname = "SRE"
       sn = "User"
-      mail = "sre@oncall.local.runkora.io"
+      mail = "oncall-sre@local.runkora.io"
       uidnumber = 1010
       primarygroup = 1100
-      othergroups = [5005]
+      othergroups = [5105, 5005]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "feature-admin"
       givenname = "Admin"
       sn = "User"
-      mail = "admin@feature.local.runkora.io"
+      mail = "feature-admin@local.runkora.io"
       uidnumber = 1011
       primarygroup = 1100
-      othergroups = [5001]
+      othergroups = [5106, 5001]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[users]]
       name = "feature-maintainer"
       givenname = "Maintainer"
       sn = "User"
-      mail = "maintainer@feature.local.runkora.io"
+      mail = "feature-maintainer@local.runkora.io"
       uidnumber = 1012
       primarygroup = 1100
-      othergroups = [5006]
+      othergroups = [5106, 5006]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[groups]]
@@ -196,6 +196,25 @@ data:
     [[groups]]
       name = "maintainer"
       gidnumber = 5006
+    # The tenant groups. Each tenant's claimBinding names one of them.
+    [[groups]]
+      name = "tenant-example"
+      gidnumber = 5101
+    [[groups]]
+      name = "tenant-engineering"
+      gidnumber = 5102
+    [[groups]]
+      name = "tenant-sre"
+      gidnumber = 5103
+    [[groups]]
+      name = "tenant-autofix"
+      gidnumber = 5104
+    [[groups]]
+      name = "tenant-oncall"
+      gidnumber = 5105
+    [[groups]]
+      name = "tenant-feature"
+      gidnumber = 5106
 ---
 apiVersion: v1
 kind: Service

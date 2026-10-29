@@ -94,27 +94,27 @@ Inspect the cluster between stages with `kubectl --context k3d-kora-quickstart g
 
 ## Users
 
-Every user signs in with the password `password`. kora routes each person to a tenant by the domain of their email. A user can sign in once the example that declares their tenant is applied.
+Every user signs in with the password `password`. Every tenant claims the `local.runkora.io` domain and binds to one tenant group with `claimBinding`. kora signs each person in to the tenant whose group they are in. A user can sign in once the example that declares their tenant is applied.
 
 *   **`single-tenant`:**
-    *   `admin@local.runkora.io`: Groups `platform-admin` and `engineer`.
-    *   `engineer@local.runkora.io`: Groups `engineer` and `kora-viewer`.
+    *   `admin@local.runkora.io`: Tenant `example`, groups `platform-admin` and `engineer`.
+    *   `engineer@local.runkora.io`: Tenant `example`, groups `engineer` and `kora-viewer`.
 *   **`multi-tenant`:**
-    *   `admin@engineering.local.runkora.io`: Tenant `engineering`, group `platform-admin`.
-    *   `dev@engineering.local.runkora.io`: Tenant `engineering`, groups `reviewer` and `kora-viewer`.
-    *   `admin@sre.local.runkora.io`: Tenant `sre`, group `platform-admin`.
-    *   `oncall@sre.local.runkora.io`: Tenant `sre`, groups `sre` and `kora-viewer`.
+    *   `engineering-admin@local.runkora.io`: Tenant `engineering`, group `platform-admin`.
+    *   `engineering-dev@local.runkora.io`: Tenant `engineering`, groups `reviewer` and `kora-viewer`.
+    *   `sre-admin@local.runkora.io`: Tenant `sre`, group `platform-admin`.
+    *   `sre-oncall@local.runkora.io`: Tenant `sre`, groups `sre` and `kora-viewer`.
 *   **`autofix`:**
-    *   `admin@autofix.local.runkora.io`: Group `platform-admin`.
-    *   `maintainer@autofix.local.runkora.io`: Group `maintainer`.
+    *   `autofix-admin@local.runkora.io`: Tenant `autofix`, group `platform-admin`.
+    *   `autofix-maintainer@local.runkora.io`: Tenant `autofix`, group `maintainer`.
 *   **`sre`:**
-    *   `admin@oncall.local.runkora.io`: Tenant `oncall`, group `platform-admin`.
-    *   `sre@oncall.local.runkora.io`: Tenant `oncall`, group `sre`.
+    *   `oncall-admin@local.runkora.io`: Tenant `oncall`, group `platform-admin`.
+    *   `oncall-sre@local.runkora.io`: Tenant `oncall`, group `sre`.
 *   **`feature`:**
-    *   `admin@feature.local.runkora.io`: Group `platform-admin`.
-    *   `maintainer@feature.local.runkora.io`: Group `maintainer`.
+    *   `feature-admin@local.runkora.io`: Tenant `feature`, group `platform-admin`.
+    *   `feature-maintainer@local.runkora.io`: Tenant `feature`, group `maintainer`.
 
-The users and their groups live in `manifests/dex/glauth.yaml`. kora reads a person's roles from the `groups` claim in their ID token. `platform-admin` holds every scope in kora, and `kora-viewer` reads everything in the tenant. Both are built-in roles that kora maps from the group name. Each example grants the other groups their scopes with `PolicyRole` resources.
+The users and their groups live in `manifests/dex/glauth.yaml`. Each user is also in one `tenant-<name>` group, which picks their tenant. kora reads a person's roles from the `groups` claim in their ID token. `platform-admin` holds every scope in kora, and `kora-viewer` reads everything in the tenant. Both are built-in roles that kora maps from the group name. Each example grants the other groups their scopes with `PolicyRole` resources.
 
 ## Run another example
 

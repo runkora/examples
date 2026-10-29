@@ -15,9 +15,14 @@ spec:
     issuerURL: https://dex.local.runkora.io:5557/dex
     clientID: kora-quickstart
     scopes: [openid, profile, email, groups]
-    # The console routes a person to this tenant by the domain of their email.
+    # Every example tenant claims local.runkora.io. kora signs a person in to
+    # the tenant whose group is in their groups claim.
     emailDomains:
       - local.runkora.io
+    claimBinding:
+      claim: groups
+      values:
+        - tenant-example
   # Enabled lets people build agents in the console next to the declared ones.
   # Set Disabled to make ../tenant the only way to change the tenant's agents,
   # environments, trigger sources, triggers and roles.

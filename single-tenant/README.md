@@ -49,7 +49,7 @@ On the quickstart, run `make tunnel` first and use the webhook URL it prints, as
 ## Run it on your own cluster
 
 1.  Copy `platform/` and `tenant/` into the repositories your GitOps tool reads.
-2.  In `platform/tenants/example.yaml`, replace the `oidc` block with the client your identity provider gives you, and set `emailDomains` to your domains.
+2.  In `platform/tenants/example.yaml`, replace the `oidc` block with the client your identity provider gives you, and set `emailDomains` to your domains. Drop `claimBinding` when no other tenant shares the domain.
 3.  In `platform/models/`, point each route at an `InferenceProvider` you registered.
 4.  Create a `ClusterSecretStore` named `example-secret-store` that points at your secret manager, and store the webhook signing secret under the key `example-github-webhook`.
 5.  Set `runkora.io/repository` in each `kustomization.yaml` to your repository.

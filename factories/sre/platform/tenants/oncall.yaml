@@ -15,9 +15,14 @@ spec:
     issuerURL: https://dex.local.runkora.io:5557/dex
     clientID: kora-quickstart
     scopes: [openid, profile, email, groups]
-    # The console routes a person to this tenant by the domain of their email.
+    # Every example tenant claims local.runkora.io. kora signs a person in to
+    # the tenant whose group is in their groups claim.
     emailDomains:
-      - oncall.local.runkora.io
+      - local.runkora.io
+    claimBinding:
+      claim: groups
+      values:
+        - tenant-oncall
   apiAuthoring: Enabled
   # The tenant's spending limit across every agent and person.
   budget:

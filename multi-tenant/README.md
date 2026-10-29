@@ -41,7 +41,7 @@ kubectl apply -k multi-tenant/engineering
 kubectl apply -k multi-tenant/sre
 ```
 
-Sign in as `admin@engineering.local.runkora.io` or `admin@sre.local.runkora.io`. Each admin sees only their own tenant.
+Sign in as `engineering-admin@local.runkora.io` or `sre-admin@local.runkora.io`. Both tenants share the `local.runkora.io` domain, and each binds to its own tenant group. Each admin sees only their own tenant.
 
 ## How the agents reach a model
 
@@ -57,7 +57,7 @@ Sign in as `admin@engineering.local.runkora.io` or `admin@sre.local.runkora.io`.
 
 ## Add a team
 
-1.  Add a `KoraTenant` for the team under `platform/tenants/` with the team's email domain.
+1.  Add a `KoraTenant` for the team under `platform/tenants/` with your email domain and a `claimBinding` on the team's group.
 2.  Create a repository for the team with a `kustomization.yaml` that sets `namespace: kora-tenant-<team>`.
 3.  Point your GitOps tool at the new repository.
 

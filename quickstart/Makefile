@@ -27,16 +27,16 @@ REPOS_single-tenant := tenant
 SIGN_IN_single-tenant := admin@local.runkora.io
 TENANTS_multi-tenant := engineering sre
 REPOS_multi-tenant := engineering sre
-SIGN_IN_multi-tenant := admin@engineering.local.runkora.io or admin@sre.local.runkora.io
+SIGN_IN_multi-tenant := engineering-admin@local.runkora.io or sre-admin@local.runkora.io
 TENANTS_factories/autofix := autofix
 REPOS_factories/autofix := factory
-SIGN_IN_factories/autofix := admin@autofix.local.runkora.io
+SIGN_IN_factories/autofix := autofix-admin@local.runkora.io
 TENANTS_factories/sre := oncall
 REPOS_factories/sre := factory
-SIGN_IN_factories/sre := admin@oncall.local.runkora.io
+SIGN_IN_factories/sre := oncall-admin@local.runkora.io
 TENANTS_factories/feature := feature
 REPOS_factories/feature := factory
-SIGN_IN_factories/feature := admin@feature.local.runkora.io
+SIGN_IN_factories/feature := feature-admin@local.runkora.io
 
 # The webhook signing secrets the examples' trigger sources read, one per
 # tenant and provider. make credentials generates each one.

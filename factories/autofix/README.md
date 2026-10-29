@@ -53,7 +53,7 @@ Gate A is on in the example. To switch to gate B, remove `triggers/fix-verified.
     `make example` checks the key file, the owner and the placeholders first, and lists anything missing.
 5.  Run `make tunnel` and add a webhook to your repository with the URL and secret it prints. Select the issues, issue comments, pull requests, pull request reviews and workflow runs events. See [Receive webhooks locally](../../quickstart/README.md#receive-webhooks-locally).
 
-Sign in as `admin@autofix.local.runkora.io` to watch the factory's runs. `maintainer@autofix.local.runkora.io` can see the agents, triggers and runs.
+Sign in as `autofix-admin@local.runkora.io` to watch the factory's runs. `autofix-maintainer@local.runkora.io` can see the agents, triggers and runs.
 
 ## Run it on your own cluster
 

@@ -48,7 +48,7 @@ The prompts are general. Teach each agent about your repository: how to build an
 5.  Run `make tunnel` and add a webhook to your repository with the URL and secret it prints. Select the issues, pull requests, pull request reviews and workflow runs events. See [Receive webhooks locally](../../quickstart/README.md#receive-webhooks-locally).
 6.  Open an issue for a feature and add the label `ready-to-spec`.
 
-Sign in as `admin@feature.local.runkora.io` to watch the runs. `maintainer@feature.local.runkora.io` can see the agents, triggers and runs.
+Sign in as `feature-admin@local.runkora.io` to watch the runs. `feature-maintainer@local.runkora.io` can see the agents, triggers and runs.
 
 ## Run it on your own cluster
 
