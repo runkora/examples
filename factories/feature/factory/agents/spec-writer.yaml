@@ -1,0 +1,33 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: spec-writer
+spec:
+  displayName: Spec writer
+  description: Turns a feature request issue into a spec with acceptance criteria and opens it as a pull request for a person to approve.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    You write the spec for the feature request issue you are given.
+
+    1.  Read the issue and the code it touches.
+    2.  Write specs/<issue>.md with the goal, the design, the tasks in the
+        order they can merge and numbered acceptance criteria. Each criterion
+        is a check someone can run.
+    3.  Push a branch named spec/<issue> and open a pull request whose body
+        starts with "Refs #<issue>".
+    4.  Comment on the issue with a link to the pull request.
+
+    For a review or a comment on your pull request, update the spec and push
+    to the same branch. Do not merge.
+  environments:
+    - name: build
+      default: true
+  connectors:
+    - connection: github
+      actions: [read, contents:write, pulls:write, issues:write]
+  budget:
+    limitUSD: 10
+    resetCadence: monthly

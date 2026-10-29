@@ -1,0 +1,32 @@
+# The feature factory: a tenant team's repository that turns a feature request
+# into a spec, splits it into tasks and builds each task in a pull request.
+# Point your GitOps tool at this folder, or apply it with kubectl apply -k.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# The factory's tenant namespace. The resource files leave namespace out.
+namespace: kora-tenant-feature
+commonAnnotations:
+  # The console shows this value as "Managed by" on each declared item.
+  runkora.io/repository: github.com/runkora/examples
+# Applies the resources in the order below. The captain's scopes name the
+# implementer, which must exist first.
+sortOptions:
+  order: fifo
+resources:
+  - shared/github-connection.yaml
+  - shared/github-source.yaml
+  - shared/build-environment.yaml
+  - shared/maintainer-role.yaml
+  - agents/implementer.yaml
+  - agents/spec-writer.yaml
+  - agents/reviewer.yaml
+  - agents/verifier.yaml
+  - agents/captain.yaml
+  - triggers/spec-on-ready.yaml
+  - triggers/plan-on-spec-merged.yaml
+  - triggers/next-on-task-merged.yaml
+  - triggers/captain-on-needs-human.yaml
+  - triggers/review-task-pr.yaml
+  - triggers/verify-on-ci-pass.yaml
+  - triggers/implementer-on-ci.yaml
+  - triggers/implementer-on-review.yaml

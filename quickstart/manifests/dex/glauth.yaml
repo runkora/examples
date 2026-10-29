@@ -17,6 +17,8 @@
 #   maintainer@autofix.local.runkora.io    autofix         maintainer
 #   admin@oncall.local.runkora.io          sre             platform-admin
 #   sre@oncall.local.runkora.io            sre             sre
+#   admin@feature.local.runkora.io         feature         platform-admin
+#   maintainer@feature.local.runkora.io    feature         maintainer
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -142,6 +144,26 @@ data:
       uidnumber = 1010
       primarygroup = 1100
       othergroups = [5005]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "feature-admin"
+      givenname = "Admin"
+      sn = "User"
+      mail = "admin@feature.local.runkora.io"
+      uidnumber = 1011
+      primarygroup = 1100
+      othergroups = [5001]
+      passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+
+    [[users]]
+      name = "feature-maintainer"
+      givenname = "Maintainer"
+      sn = "User"
+      mail = "maintainer@feature.local.runkora.io"
+      uidnumber = 1012
+      primarygroup = 1100
+      othergroups = [5006]
       passsha256 = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 
     [[groups]]

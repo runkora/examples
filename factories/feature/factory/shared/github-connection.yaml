@@ -1,0 +1,37 @@
+# The factory's GitHub App installation. Store the App's private key under the
+# remote key below and set the config values from the App's settings. See
+# https://github.com/runkora/kora/blob/main/docs/guides/register-connection.md.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-app
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: example-secret-store
+  target:
+    name: github-app
+  data:
+    - secretKey: key.pem
+      remoteRef:
+        key: feature-github-app
+        property: key.pem
+---
+apiVersion: runkora.io/v1alpha1
+kind: Connection
+metadata:
+  name: github
+spec:
+  adapter: github_app
+  baseHost: github.com
+  secretRef: github-app
+  secretKey: key.pem
+  config:
+    # The App ID from the App's settings page.
+    app_id: "123456"
+    # The number at the end of the installation's settings URL.
+    installation_id: 12345678
+    # The organisation the App is installed on. kora denies requests for any
+    # other owner.
+    owner: example-org

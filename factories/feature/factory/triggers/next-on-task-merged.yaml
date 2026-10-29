@@ -1,0 +1,27 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: next-on-task-merged
+spec:
+  source: github
+  eventType: pull_request
+  match:
+    action: [closed]
+    pull_request.merged: ["true"]
+    repository.full_name: [example-org/example-repo]
+  matchContains:
+    pull_request.head.ref: [feature/]
+  routing:
+    candidates: [captain]
+    model:
+      family: typesafe
+      name: jev-1-14
+    fallback: captain
+    joinRuns: true
+  promptTemplate: |
+    A task pull request merged. Update the checklist and start the next tasks.
+
+    Repository: {{ repository.full_name }}
+    Task pull request: #{{ pull_request.number }}
+    Branch: {{ pull_request.head.ref }}
+    Body: {{ pull_request.body }}

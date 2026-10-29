@@ -1,0 +1,18 @@
+# anthropic/claude-sonnet-5-5 is the model the implementer builds features
+# with. It routes to the OpenRouter provider in quickstart/providers. On your own
+# cluster, point the route at a provider you registered.
+apiVersion: runkora.io/v1alpha1
+kind: VirtualModel
+metadata:
+  name: anthropic-claude-sonnet-5-5
+  namespace: kora-system
+spec:
+  family: anthropic
+  name: claude-sonnet-5-5
+  displayName: Claude Sonnet 5.5
+  description: Claude Sonnet 5.5 through OpenRouter.
+  strategy: priority
+  routes:
+    - provider: compatible:openrouter
+      modelID: anthropic/claude-sonnet-5.5
+      priority: 1

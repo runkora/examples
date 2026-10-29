@@ -28,6 +28,7 @@ The quickstart installs runkora on a local k3d cluster. It installs Istio, SPIRE
     *   **[`multi-tenant`](../multi-tenant):** Two tenants, engineering and SRE, with four use cases. It also needs an Exa API key and a GitHub App.
     *   **[`autofix`](../factories/autofix):** A factory that finds, verifies and fixes bugs in a GitHub repository. It needs a GitHub App and a repository.
     *   **[`sre`](../factories/sre):** A factory that triages alerts, sweeps the cluster's costs with OpenCost and proposes fixes. It needs a GitHub App and a repository.
+    *   **[`feature`](../factories/feature):** A factory that specs, plans and builds features from issues. It needs a GitHub App and a repository.
     *   **`none`:** Installs kora with no tenants. You can apply an example later with `make example`.
 
     Set `EXAMPLE` to skip the question, such as `make up EXAMPLE=multi-tenant`.
@@ -43,7 +44,7 @@ Each example declares four models in its `platform/models/`:
 *   `deepseek/deepseek-v4-1-flash` and `openai/gpt-6-luna` route to OpenRouter.
 *   `openai/gpt-oss-20b` routes to Ollama.
 
-`multi-tenant`, `autofix` and `sre` also declare `typesafe/jev-1-14`, a decision model on OpenRouter that their routed triggers use to pick an agent.
+`multi-tenant`, `autofix`, `sre` and `feature` also declare `typesafe/jev-1-14`, a decision model on OpenRouter that their routed triggers use to pick an agent.
 
 ### OpenRouter
 
@@ -109,6 +110,9 @@ Every user signs in with the password `password`. kora routes each person to a t
 *   **`sre`:**
     *   `admin@oncall.local.runkora.io`: Tenant `oncall`, group `platform-admin`.
     *   `sre@oncall.local.runkora.io`: Tenant `oncall`, group `sre`.
+*   **`feature`:**
+    *   `admin@feature.local.runkora.io`: Group `platform-admin`.
+    *   `maintainer@feature.local.runkora.io`: Group `maintainer`.
 
 The users and their groups live in `manifests/dex/glauth.yaml`. kora reads a person's roles from the `groups` claim in their ID token. `platform-admin` holds every scope in kora, and `kora-viewer` reads everything in the tenant. Both are built-in roles that kora maps from the group name. Each example grants the other groups their scopes with `PolicyRole` resources.
 

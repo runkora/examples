@@ -1,0 +1,30 @@
+# The reviewer's review, the verifier's verification and a person's review all
+# reach the implementer here.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: implementer-on-review
+spec:
+  source: github
+  eventType: pull_request_review
+  match:
+    action: [submitted]
+    pull_request.user.login: ["example-feature[bot]"]
+    repository.full_name: [example-org/example-repo]
+  matchContains:
+    pull_request.head.ref: [feature/]
+  routing:
+    candidates: [implementer]
+    model:
+      family: typesafe
+      name: jev-1-14
+    fallback: implementer
+    joinRuns: true
+  promptTemplate: |
+    {{ review.user.login }} reviewed your pull request. Address the review.
+
+    Repository: {{ repository.full_name }}
+    Pull request: #{{ pull_request.number }}
+    Branch: {{ pull_request.head.ref }}
+    Link: {{ pull_request.html_url }}
+    Review: {{ review.body }}

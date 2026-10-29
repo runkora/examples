@@ -1,0 +1,22 @@
+# A person approves the spec by merging its pull request.
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: plan-on-spec-merged
+spec:
+  source: github
+  eventType: pull_request
+  match:
+    action: [closed]
+    pull_request.merged: ["true"]
+    repository.full_name: [example-org/example-repo]
+  matchContains:
+    pull_request.head.ref: [spec/]
+  agent: captain
+  promptTemplate: |
+    A spec merged. Plan the feature and start its first tasks.
+
+    Repository: {{ repository.full_name }}
+    Spec pull request: #{{ pull_request.number }}
+    Branch: {{ pull_request.head.ref }}
+    Body: {{ pull_request.body }}

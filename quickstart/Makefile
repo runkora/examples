@@ -21,7 +21,7 @@ TUNNEL_DIR := .tunnel
 # The examples make example applies. For each example: the tenants its
 # platform repository declares, its tenant repositories and the user to sign in
 # as.
-EXAMPLES := single-tenant multi-tenant factories/autofix factories/sre
+EXAMPLES := single-tenant multi-tenant factories/autofix factories/sre factories/feature
 TENANTS_single-tenant := example
 REPOS_single-tenant := tenant
 SIGN_IN_single-tenant := admin@local.runkora.io
@@ -34,10 +34,13 @@ SIGN_IN_factories/autofix := admin@autofix.local.runkora.io
 TENANTS_factories/sre := oncall
 REPOS_factories/sre := factory
 SIGN_IN_factories/sre := admin@oncall.local.runkora.io
+TENANTS_factories/feature := feature
+REPOS_factories/feature := factory
+SIGN_IN_factories/feature := admin@feature.local.runkora.io
 
 # The webhook signing secrets the examples' trigger sources read, one per
 # tenant and provider. make credentials generates each one.
-WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook oncall-github-webhook oncall-alertmanager-webhook
+WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook oncall-github-webhook oncall-alertmanager-webhook feature-github-webhook
 
 # The credentials you fill in from .env.example. The install runs without the
 # file, and make credentials skips each value that is not set.
@@ -187,10 +190,11 @@ credentials: $(addprefix $(SECRETS)/,$(WEBHOOK_SECRETS))
 		$(call apply,kora-credentials,secret generic sre-exa --from-literal=apiKey="$$EXA_API_KEY"); \
 	fi
 	@if [ -n "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
-		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app, autofix-github-app and oncall-github-app in kora-credentials"; \
+		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app, autofix-github-app, oncall-github-app and feature-github-app in kora-credentials"; \
 		$(call apply,kora-credentials,secret generic engineering-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 		$(call apply,kora-credentials,secret generic autofix-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 		$(call apply,kora-credentials,secret generic oncall-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
+		$(call apply,kora-credentials,secret generic feature-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 	fi
 	@for name in $(WEBHOOK_SECRETS); do \
 		echo "$(SECRETS)/$$name -> Secret $$name in kora-credentials"; \
@@ -218,9 +222,10 @@ example:
 		echo "  2) multi-tenant   Two teams with four use cases. Also needs an Exa key and a GitHub App."; \
 		echo "  3) autofix        A factory that finds, verifies and fixes bugs. Needs a GitHub App and a repository."; \
 		echo "  4) sre            A factory that triages alerts and proposes fixes. Needs a GitHub App and a repository."; \
-		echo "  5) none           Apply one later with make example."; \
-		printf "Choose 1, 2, 3, 4 or 5 [1]: "; read choice; \
-		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=factories/sre;; 5) example=none;; *) example=single-tenant;; esac; \
+		echo "  5) feature        A factory that specs, plans and builds features. Needs a GitHub App and a repository."; \
+		echo "  6) none           Apply one later with make example."; \
+		printf "Choose 1, 2, 3, 4, 5 or 6 [1]: "; read choice; \
+		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=factories/sre;; 5) example=factories/feature;; 6) example=none;; *) example=single-tenant;; esac; \
 	fi; \
 	[ "$${example:-single-tenant}" = none ] || $(MAKE) --no-print-directory apply-example EXAMPLE=$${example:-single-tenant}
 
@@ -271,6 +276,21 @@ ifeq ($(EXAMPLE),factories/sre)
 	fi; \
 	if [ $$missing = 1 ]; then \
 		echo "See factories/sre/README.md. Then run make credentials example EXAMPLE=factories/sre."; exit 1; \
+	fi
+endif
+ifeq ($(EXAMPLE),factories/feature)
+	@missing=0; \
+	if [ ! -f "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
+		echo "feature: set GITHUB_APP_PRIVATE_KEY_FILE in quickstart/.env to your GitHub App's private key file."; missing=1; \
+	fi; \
+	if grep -q 'owner: example-org' ../factories/feature/factory/shared/github-connection.yaml; then \
+		echo "feature: set app_id, installation_id and owner in factories/feature/factory/shared/github-connection.yaml."; missing=1; \
+	fi; \
+	if grep -rqF -e 'example-org/example-repo' -e 'example-feature[bot]' ../factories/feature/factory/triggers; then \
+		echo "feature: replace example-org/example-repo and example-feature[bot] in factories/feature/factory/triggers with your repository and your App's bot user."; missing=1; \
+	fi; \
+	if [ $$missing = 1 ]; then \
+		echo "See factories/feature/README.md. Then run make credentials example EXAMPLE=factories/feature."; exit 1; \
 	fi
 endif
 
