@@ -12,7 +12,7 @@ CONTEXT := k3d-$(CLUSTER)
 # is an identity migration.
 TRUST_DOMAIN := quickstart.runkora.test
 
-# Keys, passwords and certificates generated on your machine. Git ignores them.
+# Keys and passwords generated on your machine. Git ignores them.
 SECRETS := .secrets
 
 # The webhook tunnel's process ID, URL and log. Git ignores the folder.
@@ -62,7 +62,7 @@ up: tools cluster namespaces secrets istio spire data dex eso kora credentials p
 
 # Checks the tools the install uses.
 tools:
-	@for tool in docker k3d kubectl helm mkcert openssl; do \
+	@for tool in docker k3d kubectl helm openssl; do \
 		command -v $$tool >/dev/null || { echo "Missing $$tool. See README.md for the prerequisites."; exit 1; }; \
 	done
 
@@ -79,14 +79,6 @@ cluster:
 # Creates the namespaces, with the labels kora-system needs before kora starts.
 namespaces:
 	$(KUBECTL) apply -f manifests/namespaces.yaml
-
-# A certificate for *.local.runkora.io from a local CA. mkcert -install adds the
-# CA to your system trust store for your browser to trust the console and Dex.
-# It asks for your password the first time.
-$(SECRETS)/tls.crt:
-	@mkdir -p $(SECRETS)
-	mkcert -install
-	mkcert -cert-file $(SECRETS)/tls.crt -key-file $(SECRETS)/tls.key local.runkora.io '*.local.runkora.io'
 
 # The RSA key kora signs its access tokens with.
 $(SECRETS)/signing.key:
@@ -112,7 +104,7 @@ $(SECRETS)/%-webhook:
 
 # Stores the generated values in the cluster. kora reads kora-secrets and
 # kora-frontend-secrets. The chart does not create them.
-secrets: $(SECRETS)/tls.crt $(SECRETS)/signing.key $(SECRETS)/db-password $(SECRETS)/redis-password $(SECRETS)/session-secret $(SECRETS)/triggers-key
+secrets: $(SECRETS)/signing.key $(SECRETS)/db-password $(SECRETS)/redis-password $(SECRETS)/session-secret $(SECRETS)/triggers-key
 	$(call apply,kora-data,secret generic postgres --from-file=password=$(SECRETS)/db-password)
 	$(call apply,kora-data,secret generic redis --from-file=password=$(SECRETS)/redis-password)
 	$(call apply,kora-system,secret generic kora-secrets \
@@ -121,9 +113,6 @@ secrets: $(SECRETS)/tls.crt $(SECRETS)/signing.key $(SECRETS)/db-password $(SECR
 		--from-file=KORA_TOKEN_SIGNING_KEY=$(SECRETS)/signing.key \
 		--from-file=KORA_TRIGGERS_ENCRYPTION_KEY=$(SECRETS)/triggers-key)
 	$(call apply,kora-system,secret generic kora-frontend-secrets --from-file=BFF_SESSION_SECRET=$(SECRETS)/session-secret)
-	$(call apply,kora-system,secret tls kora-gateway-tls --cert=$(SECRETS)/tls.crt --key=$(SECRETS)/tls.key)
-	$(call apply,dex,secret tls dex-tls --cert=$(SECRETS)/tls.crt --key=$(SECRETS)/tls.key)
-	$(call apply,kora-system,configmap local-ca --from-file=ca.crt="$$(mkcert -CAROOT)/rootCA.pem")
 
 # Istio in sidecar mode with the CNI plugin. kora's services and agents run in
 # the mesh.
@@ -322,7 +311,7 @@ ifeq ($(EXAMPLE),factories/sre)
 endif
 	@echo
 	@echo "$(EXAMPLE) is running."
-	@echo "  Console:  https://local.runkora.io:9443"
+	@echo "  Console:  http://kora.localhost:9880"
 	@echo "  Sign in:  $(SIGN_IN_$(EXAMPLE)), password \"password\""
 	@echo
 
@@ -350,15 +339,14 @@ ask-tunnel:
 # for every trigger source in the cluster. Paste each URL and its secret into
 # the provider's webhook settings. The URL changes each time the tunnel starts.
 #
-# The tunnel forwards to the gateway on localhost:9443 as api.local.runkora.io.
+# The tunnel forwards to the gateway on localhost:9880 as api.kora.localhost.
 # The webhook path accepts only events signed with the source's secret. The
 # console and the API still need a sign-in.
 tunnel: tunnel-stop
 	@command -v cloudflared >/dev/null || { echo "Missing cloudflared. Install it with brew install cloudflared."; exit 1; }
 	@mkdir -p $(TUNNEL_DIR)
-	@nohup cloudflared tunnel --no-autoupdate --url https://localhost:9443 \
-		--http-host-header api.local.runkora.io --origin-server-name api.local.runkora.io \
-		--no-tls-verify > $(TUNNEL_DIR)/cloudflared.log 2>&1 & echo $$! > $(TUNNEL_DIR)/pid
+	@nohup cloudflared tunnel --no-autoupdate --url http://localhost:9880 \
+		--http-host-header api.kora.localhost > $(TUNNEL_DIR)/cloudflared.log 2>&1 & echo $$! > $(TUNNEL_DIR)/pid
 	@for i in $$(seq 30); do \
 		url=$$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' $(TUNNEL_DIR)/cloudflared.log | head -1); \
 		[ -n "$$url" ] && break; sleep 1; \
@@ -388,9 +376,9 @@ alert:
 	[ -n "$$path" ] || { echo "The sre example's alertmanager source is not ready. Run make example EXAMPLE=factories/sre."; exit 1; }; \
 	now=$$(date -u +%Y-%m-%dT%H:%M:%SZ); \
 	printf '%s' '{"version":"4","status":"$(STATUS)","receiver":"kora","groupKey":"{}:{alertname=\"KubePodCrashLooping\", namespace=\"shop\"}","truncatedAlerts":0,"groupLabels":{"alertname":"KubePodCrashLooping","namespace":"shop"},"commonLabels":{"alertname":"KubePodCrashLooping","namespace":"shop","deployment":"checkout","severity":"critical"},"commonAnnotations":{"summary":"checkout is crash-looping in shop","description":"A checkout pod in shop restarted more than three times in the last ten minutes."},"externalURL":"http://alertmanager.local","alerts":[{"status":"$(STATUS)","labels":{"alertname":"KubePodCrashLooping","namespace":"shop","deployment":"checkout","severity":"critical"},"annotations":{"summary":"checkout is crash-looping in shop"},"startsAt":"'"$$now"'","endsAt":"0001-01-01T00:00:00Z","generatorURL":"http://prometheus.local/graph","fingerprint":"5f1c0a6e2b7d9c31"}]}' | \
-	curl -sS --fail-with-body --resolve api.local.runkora.io:9443:127.0.0.1 --cacert "$$(mkcert -CAROOT)/rootCA.pem" \
+	curl -sS --fail-with-body \
 		-H "Authorization: Bearer $$(cat $(SECRETS)/oncall-alertmanager-webhook)" -H 'Content-Type: application/json' \
-		--data-binary @- "https://api.local.runkora.io:9443$$path" && echo && echo "Posted a $(STATUS) KubePodCrashLooping alert for shop/checkout."
+		--data-binary @- "http://api.kora.localhost:9880$$path" && echo && echo "Posted a $(STATUS) KubePodCrashLooping alert for shop/checkout."
 
 # Deletes the cluster. The next make up reuses the files in .secrets.
 down: tunnel-stop

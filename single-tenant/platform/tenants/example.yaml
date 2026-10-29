@@ -12,7 +12,7 @@ spec:
   displayName: Example
   active: true
   oidc:
-    issuerURL: https://dex.local.runkora.io:5557/dex
+    issuerURL: http://dex.localhost:5557/dex
     clientID: kora-quickstart
     scopes: [openid, profile, email, groups]
     # Every example tenant claims local.runkora.io. kora signs a person in to

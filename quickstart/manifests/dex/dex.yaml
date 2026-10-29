@@ -2,9 +2,9 @@
 # each tenant points at your own provider, such as Okta or Entra ID. See the
 # tenants folder in each example's platform repository.
 #
-# The issuer https://dex.local.runkora.io:5557/dex must be the same URL for the
+# The issuer http://dex.localhost:5557/dex must be the same URL for the
 # browser and for the identity service:
-#   - The browser resolves dex.local.runkora.io to 127.0.0.1, and k3d forwards
+#   - The browser resolves dex.localhost to your machine, and k3d forwards
 #     port 5557 to this Service.
 #   - The identity service resolves it to this Service's fixed ClusterIP through
 #     identity.hostAliases in values/kora.yaml.
@@ -15,20 +15,18 @@ metadata:
   namespace: dex
 data:
   config.yaml: |
-    issuer: https://dex.local.runkora.io:5557/dex
+    issuer: http://dex.localhost:5557/dex
 
     # Sessions are lost when Dex restarts. Sign in again if that happens.
     storage:
       type: memory
 
     web:
-      https: 0.0.0.0:5557
-      tlsCert: /etc/dex/tls/tls.crt
-      tlsKey: /etc/dex/tls/tls.key
+      http: 0.0.0.0:5557
       # The console fetches Dex's discovery document and token endpoint from
       # the browser.
       allowedOrigins:
-        - https://local.runkora.io:9443
+        - http://kora.localhost:9880
 
     oauth2:
       deviceCodeGrant: true
@@ -42,7 +40,7 @@ data:
         name: kora quickstart
         public: true
         redirectURIs:
-          - https://local.runkora.io:9443/auth/callback
+          - http://kora.localhost:9880/auth/callback
           - /device/callback
 
     connectors:
@@ -85,7 +83,7 @@ spec:
   selector:
     app: dex
   ports:
-    - name: https
+    - name: http
       port: 5557
 ---
 apiVersion: apps/v1
@@ -113,19 +111,13 @@ spec:
             httpGet:
               path: /dex/healthz
               port: 5557
-              scheme: HTTPS
+              scheme: HTTP
             periodSeconds: 5
           volumeMounts:
             - name: config
               mountPath: /etc/dex/config.yaml
               subPath: config.yaml
-            - name: tls
-              mountPath: /etc/dex/tls
       volumes:
         - name: config
           configMap:
             name: dex
-        # make secrets creates this from the mkcert certificate for *.local.runkora.io.
-        - name: tls
-          secret:
-            secretName: dex-tls
