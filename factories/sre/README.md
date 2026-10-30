@@ -44,7 +44,7 @@ The prompts are general. Teach each agent about your cluster: your runbooks, how
     `make example` lists anything missing first. It installs OpenCost, connects the factory to the quickstart's API server and deploys the broken `checkout` service from `demo/`.
 6.  Run `make tunnel` and add a webhook to your repository with the URL and secret it prints. Select the issues, issue comments and pull request reviews events. See [Receive webhooks locally](../../quickstart/README.md#receive-webhooks-locally).
 
-Sign in as `admin@oncall.local.runkora.io` to watch the runs. `sre@oncall.local.runkora.io` can see the agents, triggers and runs.
+Sign in as `oncall-admin@local.runkora.io` to watch the runs. `oncall-sre@local.runkora.io` can see the agents, triggers and runs.
 
 ## Fire an alert on the quickstart
 

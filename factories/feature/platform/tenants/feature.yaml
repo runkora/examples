@@ -1,0 +1,30 @@
+# The feature tenant. The operator creates its namespace, kora-tenant-feature.
+# ../factory applies the factory's agents, triggers and roles there.
+#
+# The oidc block points at the quickstart's Dex. On your own cluster, replace
+# it with the client your identity provider gives you. See
+# https://github.com/runkora/kora/blob/main/docs/guides/tenants.md.
+apiVersion: runkora.io/v1alpha1
+kind: KoraTenant
+metadata:
+  name: feature
+spec:
+  displayName: Feature
+  active: true
+  oidc:
+    issuerURL: http://dex.localhost:5557/dex
+    clientID: kora-quickstart
+    scopes: [openid, profile, email, groups]
+    # Every example tenant claims local.runkora.io. kora signs a person in to
+    # the tenant whose group is in their groups claim.
+    emailDomains:
+      - local.runkora.io
+    claimBinding:
+      claim: groups
+      values:
+        - tenant-feature
+  apiAuthoring: Enabled
+  # The tenant's spending limit across every agent and person.
+  budget:
+    limitUSD: 100
+    resetCadence: monthly

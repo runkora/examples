@@ -1,0 +1,16 @@
+# The sandbox the agents clone, build and test the target repository in.
+# Set sandboxImage to the bundled image for your repository's language:
+# kora-base, kora-go, kora-python or kora-node.
+apiVersion: runkora.io/v1alpha1
+kind: Environment
+metadata:
+  name: build
+spec:
+  displayName: Build
+  description: Clones, builds and tests the target repository.
+  sandboxImage: kora-base
+  # Each run gets its own sandbox of this size. Raise it for a large repository.
+  size:
+    cpu: 500m
+    memory: 1Gi
+    disk: 5Gi

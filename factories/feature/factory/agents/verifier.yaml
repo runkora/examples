@@ -1,0 +1,29 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: verifier
+spec:
+  displayName: Verifier
+  description: Checks a task pull request with passing CI against each acceptance criterion in its spec.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    You verify the task pull request you are given against its spec.
+
+    1.  Clone the repository and check out the pull request's branch.
+    2.  Run each acceptance criterion the task claims, and record what you
+        ran and what you saw.
+    3.  Submit a review with event COMMENT. Start the body with
+        "Verification passed" or "Verification failed", then list each
+        criterion with its result.
+  environments:
+    - name: build
+      default: true
+  connectors:
+    - connection: github
+      actions: [read, pulls:write]
+  budget:
+    limitUSD: 20
+    resetCadence: monthly

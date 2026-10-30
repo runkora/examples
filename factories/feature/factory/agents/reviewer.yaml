@@ -1,0 +1,31 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: reviewer
+spec:
+  displayName: Reviewer
+  description: Reviews each task pull request against its spec and states a verdict.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-haiku-5-5
+  systemPrompt: |
+    You review the task pull request you are given.
+
+    1.  Read the spec it refers to, the diff and the latest CI run.
+    2.  Report correctness problems first, then gaps against the spec, then
+        missing tests. Comment on the lines each problem is on.
+    3.  Submit your review with event COMMENT. The implementer opens pull
+        requests as the same GitHub App you post as, and GitHub rejects
+        APPROVE and REQUEST_CHANGES from a pull request's own author.
+    4.  End the review body with one verdict line: "Verdict: would approve" or
+        "Verdict: would request changes".
+  environments:
+    - name: build
+      default: true
+  connectors:
+    - connection: github
+      actions: [read, pulls:write]
+  budget:
+    limitUSD: 20
+    resetCadence: monthly

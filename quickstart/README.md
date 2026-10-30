@@ -5,8 +5,8 @@ The quickstart installs runkora on a local k3d cluster. It installs Istio, SPIRE
 ## Prerequisites
 
 *   Docker Desktop or Colima with at least 4 CPUs and 8 GiB of memory allocated to the VM.
-*   `k3d`, `kubectl`, `helm`, `mkcert`, `openssl` and `make`. On macOS, install them with `brew install k3d kubectl helm mkcert`.
-*   Free ports 9443, 9880 and 5557 on your machine.
+*   `k3d`, `kubectl`, `helm`, `openssl` and `make`. On macOS, install them with `brew install k3d kubectl helm`.
+*   Free ports 9880 and 5557 on your machine.
 *   An OpenRouter account, or Ollama on your machine.
 
 ## Files
@@ -28,12 +28,13 @@ The quickstart installs runkora on a local k3d cluster. It installs Istio, SPIRE
     *   **[`multi-tenant`](../multi-tenant):** Two tenants, engineering and SRE, with four use cases. It also needs an Exa API key and a GitHub App.
     *   **[`autofix`](../factories/autofix):** A factory that finds, verifies and fixes bugs in a GitHub repository. It needs a GitHub App and a repository.
     *   **[`sre`](../factories/sre):** A factory that triages alerts, sweeps the cluster's costs with OpenCost and proposes fixes. It needs a GitHub App and a repository.
+    *   **[`feature`](../factories/feature):** A factory that specs, plans and builds features from issues. It needs a GitHub App and a repository.
     *   **`none`:** Installs kora with no tenants. You can apply an example later with `make example`.
 
     Set `EXAMPLE` to skip the question, such as `make up EXAMPLE=multi-tenant`.
-4.  **Sign in:** Open `https://local.runkora.io:9443` and sign in with a user from [Users](#users) for the example you applied.
+4.  **Sign in:** Open `http://kora.localhost:9880` and sign in with a user from [Users](#users) for the example you applied.
 
-`*.local.runkora.io` is a public DNS record that resolves to `127.0.0.1`. It needs no local DNS setup.
+Every `*.localhost` name resolves to your machine, and browsers treat it as a secure origin over plain HTTP. The quickstart needs no certificate and no local DNS setup.
 
 ## Choose a model provider
 
@@ -43,7 +44,7 @@ Each example declares four models in its `platform/models/`:
 *   `deepseek/deepseek-v4-1-flash` and `openai/gpt-6-luna` route to OpenRouter.
 *   `openai/gpt-oss-20b` routes to Ollama.
 
-`multi-tenant`, `autofix` and `sre` also declare `typesafe/jev-1-14`, a decision model on OpenRouter that their routed triggers use to pick an agent.
+`multi-tenant`, `autofix`, `sre` and `feature` also declare `typesafe/jev-1-14`, a decision model on OpenRouter that their routed triggers use to pick an agent.
 
 ### OpenRouter
 
@@ -77,7 +78,7 @@ Each stage is a `make` target. Run one on its own to watch what it installs.
 
 1.  **`make cluster`:** Creates the `kora-quickstart` cluster from `k3d.yaml` and raises the Docker VM's inotify limit for kora's file watchers.
 2.  **`make namespaces`:** Creates `kora-data`, `dex`, `kora-credentials` and `kora-system`. The `kora-system` labels turn on Istio sidecar injection and the restricted Pod Security level.
-3.  **`make secrets`:** Generates the keys, passwords and the `*.local.runkora.io` certificate into `.secrets/`, then stores them in the cluster. `mkcert -install` adds the local CA to your system trust store and asks for your password the first time.
+3.  **`make secrets`:** Generates the keys and passwords into `.secrets/`, then stores them in the cluster.
 4.  **`make istio`:** Installs Istio in sidecar mode with the CNI plugin.
 5.  **`make spire`:** Installs SPIRE. SPIRE issues a SPIFFE identity to every kora workload and agent.
 6.  **`make data`:** Starts Postgres and Redis in `kora-data`.
@@ -93,24 +94,27 @@ Inspect the cluster between stages with `kubectl --context k3d-kora-quickstart g
 
 ## Users
 
-Every user signs in with the password `password`. kora routes each person to a tenant by the domain of their email. A user can sign in once the example that declares their tenant is applied.
+Every user signs in with the password `password`. Every tenant claims the `local.runkora.io` domain and binds to one tenant group with `claimBinding`. kora signs each person in to the tenant whose group they are in. A user can sign in once the example that declares their tenant is applied.
 
 *   **`single-tenant`:**
-    *   `admin@local.runkora.io`: Groups `platform-admin` and `engineer`.
-    *   `engineer@local.runkora.io`: Groups `engineer` and `kora-viewer`.
+    *   `admin@local.runkora.io`: Tenant `example`, groups `platform-admin` and `engineer`.
+    *   `engineer@local.runkora.io`: Tenant `example`, groups `engineer` and `kora-viewer`.
 *   **`multi-tenant`:**
-    *   `admin@engineering.local.runkora.io`: Tenant `engineering`, group `platform-admin`.
-    *   `dev@engineering.local.runkora.io`: Tenant `engineering`, groups `reviewer` and `kora-viewer`.
-    *   `admin@sre.local.runkora.io`: Tenant `sre`, group `platform-admin`.
-    *   `oncall@sre.local.runkora.io`: Tenant `sre`, groups `sre` and `kora-viewer`.
+    *   `engineering-admin@local.runkora.io`: Tenant `engineering`, group `platform-admin`.
+    *   `engineering-dev@local.runkora.io`: Tenant `engineering`, groups `reviewer` and `kora-viewer`.
+    *   `sre-admin@local.runkora.io`: Tenant `sre`, group `platform-admin`.
+    *   `sre-oncall@local.runkora.io`: Tenant `sre`, groups `sre` and `kora-viewer`.
 *   **`autofix`:**
-    *   `admin@autofix.local.runkora.io`: Group `platform-admin`.
-    *   `maintainer@autofix.local.runkora.io`: Group `maintainer`.
+    *   `autofix-admin@local.runkora.io`: Tenant `autofix`, group `platform-admin`.
+    *   `autofix-maintainer@local.runkora.io`: Tenant `autofix`, group `maintainer`.
 *   **`sre`:**
-    *   `admin@oncall.local.runkora.io`: Tenant `oncall`, group `platform-admin`.
-    *   `sre@oncall.local.runkora.io`: Tenant `oncall`, group `sre`.
+    *   `oncall-admin@local.runkora.io`: Tenant `oncall`, group `platform-admin`.
+    *   `oncall-sre@local.runkora.io`: Tenant `oncall`, group `sre`.
+*   **`feature`:**
+    *   `feature-admin@local.runkora.io`: Tenant `feature`, group `platform-admin`.
+    *   `feature-maintainer@local.runkora.io`: Tenant `feature`, group `maintainer`.
 
-The users and their groups live in `manifests/dex/glauth.yaml`. kora reads a person's roles from the `groups` claim in their ID token. `platform-admin` holds every scope in kora, and `kora-viewer` reads everything in the tenant. Both are built-in roles that kora maps from the group name. Each example grants the other groups their scopes with `PolicyRole` resources.
+The users and their groups live in `manifests/dex/glauth.yaml`. Each user is also in one `tenant-<name>` group, which picks their tenant. kora reads a person's roles from the `groups` claim in their ID token. `platform-admin` holds every scope in kora, and `kora-viewer` reads everything in the tenant. Both are built-in roles that kora maps from the group name. Each example grants the other groups their scopes with `PolicyRole` resources.
 
 ## Run another example
 
@@ -127,7 +131,7 @@ A webhook trigger fires only when the provider can reach the cluster. A tunnel g
 
 The tunnel makes the console and the API reachable from the internet while it runs. The webhook path accepts only events signed with the source's secret, and the console and the API still need a sign-in.
 
-A quick tunnel gets a new URL each time it starts. Update the provider's webhook URL after each `make tunnel`. For a URL that stays the same, create a [named Cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/) or use ngrok with a reserved domain. Point either one at `https://localhost:9443` with the host header `api.local.runkora.io`.
+A quick tunnel gets a new URL each time it starts. Update the provider's webhook URL after each `make tunnel`. For a URL that stays the same, create a [named Cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/) or use ngrok with a reserved domain. Point either one at `http://localhost:9880` with the host header `api.kora.localhost`.
 
 ## How an agent reaches a model
 
@@ -147,7 +151,7 @@ On your own cluster, keep the agents and the tenants, and point each model's rou
 
 ## Use your own sign-in provider
 
-Replace `issuerURL` and `clientID` in a tenant under the example's `platform/tenants/` with the values from your provider, set `emailDomains` to your domain, and run `make example` again. The provider must allow the redirect URI `https://local.runkora.io:9443/auth/callback`.
+Replace `issuerURL` and `clientID` in a tenant under the example's `platform/tenants/` with the values from your provider, set `emailDomains` to your domain, and run `make example` again. The provider must allow the redirect URI `http://kora.localhost:9880/auth/callback`.
 
 ## Check and remove the install
 

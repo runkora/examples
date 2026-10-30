@@ -1,0 +1,26 @@
+apiVersion: runkora.io/v1alpha1
+kind: Trigger
+metadata:
+  name: review-task-pr
+spec:
+  source: github
+  eventType: pull_request
+  match:
+    action: [opened, synchronize]
+    pull_request.user.login: ["example-feature[bot]"]
+    repository.full_name: [example-org/example-repo]
+  matchContains:
+    pull_request.head.ref: [feature/]
+  coalesce:
+    key: "{{ repository.full_name }}#{{ pull_request.number }}"
+    windowSeconds: 120
+  agent: reviewer
+  promptTemplate: |
+    Review this task pull request.
+
+    Repository: {{ repository.full_name }}
+    Pull request: #{{ pull_request.number }}
+    Title: {{ pull_request.title }}
+    Head commit: {{ pull_request.head.sha }}
+    Link: {{ pull_request.html_url }}
+    Body: {{ pull_request.body }}

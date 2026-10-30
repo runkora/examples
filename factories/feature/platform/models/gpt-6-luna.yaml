@@ -1,0 +1,17 @@
+# openai/gpt-6-luna is a low-cost chat model. It routes to the OpenRouter
+# provider in quickstart/providers.
+apiVersion: runkora.io/v1alpha1
+kind: VirtualModel
+metadata:
+  name: openai-gpt-6-luna
+  namespace: kora-system
+spec:
+  family: openai
+  name: gpt-6-luna
+  displayName: GPT-6 Luna
+  description: GPT-6 Luna through OpenRouter.
+  strategy: priority
+  routes:
+    - provider: compatible:openrouter
+      modelID: openai/gpt-6-luna
+      priority: 1

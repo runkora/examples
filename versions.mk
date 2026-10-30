@@ -2,7 +2,7 @@
 # Override any of them on the command line, e.g. make up KORA_VERSION=0.11.0.
 
 # The kora release the examples install. Both charts share the version.
-KORA_VERSION ?= 0.11.0-rc.6
+KORA_VERSION ?= 0.11.3
 KORA_CHARTS ?= oci://ghcr.io/runkora/charts
 
 # kora supports Istio 1.30 and 1.31. The operator's preflight rejects any other version.

@@ -7,13 +7,16 @@ global:
     # The in-cluster Postgres in manifests/data serves plaintext.
     sslMode: disable
 
-# *.local.runkora.io is a public DNS record that resolves to 127.0.0.1. The
-# console is https://local.runkora.io:9443 and the API is api.local.runkora.io.
-frontendHost: local.runkora.io
+# Every *.localhost name resolves to your machine, and browsers treat it as a
+# secure origin over plain HTTP. The console is http://kora.localhost:9880 and
+# the API is api.kora.localhost. No certificate is needed.
+frontendHost: kora.localhost
 
 frontend:
   config:
-    nextPublicAppUrl: https://local.runkora.io:9443
+    # The chart builds this URL from frontendHost on the standard HTTPS port.
+    # The quickstart serves plain HTTP on port 9880, so it sets the URL itself.
+    nextPublicAppUrl: http://kora.localhost:9880
 
 config:
   db:
@@ -42,32 +45,13 @@ egressGateway:
   upstreamPorts:
     - 6443
 
-gateway:
-  tls:
-    enabled: true
-    # make secrets creates this from the mkcert certificate for *.local.runkora.io.
-    credentialName: kora-gateway-tls
-
 identity:
-  # Inside the cluster dex.local.runkora.io resolves to 127.0.0.1. This alias
-  # points it at the fixed ClusterIP of the Dex Service in manifests/dex/dex.yaml.
+  # Inside the cluster this alias points dex.localhost at the fixed ClusterIP
+  # of the Dex Service in manifests/dex/dex.yaml.
   hostAliases:
     - ip: 10.43.200.10
       hostnames:
-        - dex.local.runkora.io
-  # Dex serves a certificate from the mkcert CA. The identity service trusts
-  # that CA alongside the system roots to verify Dex's tokens over TLS.
-  extraEnv:
-    - name: SSL_CERT_DIR
-      value: /etc/ssl/certs:/etc/kora/local-ca
-  extraVolumes:
-    - name: local-ca
-      configMap:
-        name: local-ca
-  extraVolumeMounts:
-    - name: local-ca
-      mountPath: /etc/kora/local-ca
-      readOnly: true
+        - dex.localhost
 
 # The quickstart runs one operator replica, with no leader election and no
 # disruption budget.

@@ -1,0 +1,37 @@
+apiVersion: runkora.io/v1alpha1
+kind: Agent
+metadata:
+  name: implementer
+spec:
+  displayName: Implementer
+  description: Builds one task of an approved spec in a pull request and answers review, verification and failed CI on its own pull requests.
+  identityMode: autonomous
+  model:
+    family: anthropic
+    name: claude-sonnet-5-5
+  systemPrompt: |
+    You build one task of an approved spec.
+
+    For a task from the captain:
+    1.  Read the spec and the task. Clone the repository.
+    2.  Write tests for the task's acceptance criteria, then build it, run
+        the tests and push the branch the captain gave you.
+    3.  Open a pull request whose body starts with "Refs #<issue>", names the
+        task and lists the acceptance criteria it meets.
+
+    For a review, a verification or a failed CI run on your pull request:
+    1.  Read every review, every comment and the latest CI run.
+    2.  Fix what they ask for, run the tests and push to the same branch.
+
+    Count your pushes after the first. When review, verification or CI still
+    fails after your third, comment what remains, add the label needs-human
+    and stop. Do not merge.
+  environments:
+    - name: build
+      default: true
+  connectors:
+    - connection: github
+      actions: [read, contents:write, pulls:write]
+  budget:
+    limitUSD: 40
+    resetCadence: monthly

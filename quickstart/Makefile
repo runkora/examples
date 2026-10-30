@@ -12,7 +12,7 @@ CONTEXT := k3d-$(CLUSTER)
 # is an identity migration.
 TRUST_DOMAIN := quickstart.runkora.test
 
-# Keys, passwords and certificates generated on your machine. Git ignores them.
+# Keys and passwords generated on your machine. Git ignores them.
 SECRETS := .secrets
 
 # The webhook tunnel's process ID, URL and log. Git ignores the folder.
@@ -21,23 +21,26 @@ TUNNEL_DIR := .tunnel
 # The examples make example applies. For each example: the tenants its
 # platform repository declares, its tenant repositories and the user to sign in
 # as.
-EXAMPLES := single-tenant multi-tenant factories/autofix factories/sre
+EXAMPLES := single-tenant multi-tenant factories/autofix factories/sre factories/feature
 TENANTS_single-tenant := example
 REPOS_single-tenant := tenant
 SIGN_IN_single-tenant := admin@local.runkora.io
 TENANTS_multi-tenant := engineering sre
 REPOS_multi-tenant := engineering sre
-SIGN_IN_multi-tenant := admin@engineering.local.runkora.io or admin@sre.local.runkora.io
+SIGN_IN_multi-tenant := engineering-admin@local.runkora.io or sre-admin@local.runkora.io
 TENANTS_factories/autofix := autofix
 REPOS_factories/autofix := factory
-SIGN_IN_factories/autofix := admin@autofix.local.runkora.io
+SIGN_IN_factories/autofix := autofix-admin@local.runkora.io
 TENANTS_factories/sre := oncall
 REPOS_factories/sre := factory
-SIGN_IN_factories/sre := admin@oncall.local.runkora.io
+SIGN_IN_factories/sre := oncall-admin@local.runkora.io
+TENANTS_factories/feature := feature
+REPOS_factories/feature := factory
+SIGN_IN_factories/feature := feature-admin@local.runkora.io
 
 # The webhook signing secrets the examples' trigger sources read, one per
 # tenant and provider. make credentials generates each one.
-WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook oncall-github-webhook oncall-alertmanager-webhook
+WEBHOOK_SECRETS := example-github-webhook engineering-github-webhook engineering-slack-webhook sre-alertmanager-webhook autofix-github-webhook oncall-github-webhook oncall-alertmanager-webhook feature-github-webhook
 
 # The credentials you fill in from .env.example. The install runs without the
 # file, and make credentials skips each value that is not set.
@@ -59,7 +62,7 @@ up: tools cluster namespaces secrets istio spire data dex eso kora credentials p
 
 # Checks the tools the install uses.
 tools:
-	@for tool in docker k3d kubectl helm mkcert openssl; do \
+	@for tool in docker k3d kubectl helm openssl; do \
 		command -v $$tool >/dev/null || { echo "Missing $$tool. See README.md for the prerequisites."; exit 1; }; \
 	done
 
@@ -76,14 +79,6 @@ cluster:
 # Creates the namespaces, with the labels kora-system needs before kora starts.
 namespaces:
 	$(KUBECTL) apply -f manifests/namespaces.yaml
-
-# A certificate for *.local.runkora.io from a local CA. mkcert -install adds the
-# CA to your system trust store for your browser to trust the console and Dex.
-# It asks for your password the first time.
-$(SECRETS)/tls.crt:
-	@mkdir -p $(SECRETS)
-	mkcert -install
-	mkcert -cert-file $(SECRETS)/tls.crt -key-file $(SECRETS)/tls.key local.runkora.io '*.local.runkora.io'
 
 # The RSA key kora signs its access tokens with.
 $(SECRETS)/signing.key:
@@ -109,7 +104,7 @@ $(SECRETS)/%-webhook:
 
 # Stores the generated values in the cluster. kora reads kora-secrets and
 # kora-frontend-secrets. The chart does not create them.
-secrets: $(SECRETS)/tls.crt $(SECRETS)/signing.key $(SECRETS)/db-password $(SECRETS)/redis-password $(SECRETS)/session-secret $(SECRETS)/triggers-key
+secrets: $(SECRETS)/signing.key $(SECRETS)/db-password $(SECRETS)/redis-password $(SECRETS)/session-secret $(SECRETS)/triggers-key
 	$(call apply,kora-data,secret generic postgres --from-file=password=$(SECRETS)/db-password)
 	$(call apply,kora-data,secret generic redis --from-file=password=$(SECRETS)/redis-password)
 	$(call apply,kora-system,secret generic kora-secrets \
@@ -118,9 +113,6 @@ secrets: $(SECRETS)/tls.crt $(SECRETS)/signing.key $(SECRETS)/db-password $(SECR
 		--from-file=KORA_TOKEN_SIGNING_KEY=$(SECRETS)/signing.key \
 		--from-file=KORA_TRIGGERS_ENCRYPTION_KEY=$(SECRETS)/triggers-key)
 	$(call apply,kora-system,secret generic kora-frontend-secrets --from-file=BFF_SESSION_SECRET=$(SECRETS)/session-secret)
-	$(call apply,kora-system,secret tls kora-gateway-tls --cert=$(SECRETS)/tls.crt --key=$(SECRETS)/tls.key)
-	$(call apply,dex,secret tls dex-tls --cert=$(SECRETS)/tls.crt --key=$(SECRETS)/tls.key)
-	$(call apply,kora-system,configmap local-ca --from-file=ca.crt="$$(mkcert -CAROOT)/rootCA.pem")
 
 # Istio in sidecar mode with the CNI plugin. kora's services and agents run in
 # the mesh.
@@ -187,10 +179,11 @@ credentials: $(addprefix $(SECRETS)/,$(WEBHOOK_SECRETS))
 		$(call apply,kora-credentials,secret generic sre-exa --from-literal=apiKey="$$EXA_API_KEY"); \
 	fi
 	@if [ -n "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
-		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app, autofix-github-app and oncall-github-app in kora-credentials"; \
+		echo "GITHUB_APP_PRIVATE_KEY_FILE -> Secrets engineering-github-app, autofix-github-app, oncall-github-app and feature-github-app in kora-credentials"; \
 		$(call apply,kora-credentials,secret generic engineering-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 		$(call apply,kora-credentials,secret generic autofix-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 		$(call apply,kora-credentials,secret generic oncall-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
+		$(call apply,kora-credentials,secret generic feature-github-app --from-file=key.pem="$$GITHUB_APP_PRIVATE_KEY_FILE"); \
 	fi
 	@for name in $(WEBHOOK_SECRETS); do \
 		echo "$(SECRETS)/$$name -> Secret $$name in kora-credentials"; \
@@ -218,9 +211,10 @@ example:
 		echo "  2) multi-tenant   Two teams with four use cases. Also needs an Exa key and a GitHub App."; \
 		echo "  3) autofix        A factory that finds, verifies and fixes bugs. Needs a GitHub App and a repository."; \
 		echo "  4) sre            A factory that triages alerts and proposes fixes. Needs a GitHub App and a repository."; \
-		echo "  5) none           Apply one later with make example."; \
-		printf "Choose 1, 2, 3, 4 or 5 [1]: "; read choice; \
-		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=factories/sre;; 5) example=none;; *) example=single-tenant;; esac; \
+		echo "  5) feature        A factory that specs, plans and builds features. Needs a GitHub App and a repository."; \
+		echo "  6) none           Apply one later with make example."; \
+		printf "Choose 1, 2, 3, 4, 5 or 6 [1]: "; read choice; \
+		case "$$choice" in 2) example=multi-tenant;; 3) example=factories/autofix;; 4) example=factories/sre;; 5) example=factories/feature;; 6) example=none;; *) example=single-tenant;; esac; \
 	fi; \
 	[ "$${example:-single-tenant}" = none ] || $(MAKE) --no-print-directory apply-example EXAMPLE=$${example:-single-tenant}
 
@@ -273,6 +267,21 @@ ifeq ($(EXAMPLE),factories/sre)
 		echo "See factories/sre/README.md. Then run make credentials example EXAMPLE=factories/sre."; exit 1; \
 	fi
 endif
+ifeq ($(EXAMPLE),factories/feature)
+	@missing=0; \
+	if [ ! -f "$$GITHUB_APP_PRIVATE_KEY_FILE" ]; then \
+		echo "feature: set GITHUB_APP_PRIVATE_KEY_FILE in quickstart/.env to your GitHub App's private key file."; missing=1; \
+	fi; \
+	if grep -q 'owner: example-org' ../factories/feature/factory/shared/github-connection.yaml; then \
+		echo "feature: set app_id, installation_id and owner in factories/feature/factory/shared/github-connection.yaml."; missing=1; \
+	fi; \
+	if grep -rqF -e 'example-org/example-repo' -e 'example-feature[bot]' ../factories/feature/factory/triggers; then \
+		echo "feature: replace example-org/example-repo and example-feature[bot] in factories/feature/factory/triggers with your repository and your App's bot user."; missing=1; \
+	fi; \
+	if [ $$missing = 1 ]; then \
+		echo "See factories/feature/README.md. Then run make credentials example EXAMPLE=factories/feature."; exit 1; \
+	fi
+endif
 
 # Applies an example: its platform repository first, then each tenant
 # repository once the operator has created the tenant's namespace.
@@ -302,7 +311,7 @@ ifeq ($(EXAMPLE),factories/sre)
 endif
 	@echo
 	@echo "$(EXAMPLE) is running."
-	@echo "  Console:  https://local.runkora.io:9443"
+	@echo "  Console:  http://kora.localhost:9880"
 	@echo "  Sign in:  $(SIGN_IN_$(EXAMPLE)), password \"password\""
 	@echo
 
@@ -330,15 +339,14 @@ ask-tunnel:
 # for every trigger source in the cluster. Paste each URL and its secret into
 # the provider's webhook settings. The URL changes each time the tunnel starts.
 #
-# The tunnel forwards to the gateway on localhost:9443 as api.local.runkora.io.
+# The tunnel forwards to the gateway on localhost:9880 as api.kora.localhost.
 # The webhook path accepts only events signed with the source's secret. The
 # console and the API still need a sign-in.
 tunnel: tunnel-stop
 	@command -v cloudflared >/dev/null || { echo "Missing cloudflared. Install it with brew install cloudflared."; exit 1; }
 	@mkdir -p $(TUNNEL_DIR)
-	@nohup cloudflared tunnel --no-autoupdate --url https://localhost:9443 \
-		--http-host-header api.local.runkora.io --origin-server-name api.local.runkora.io \
-		--no-tls-verify > $(TUNNEL_DIR)/cloudflared.log 2>&1 & echo $$! > $(TUNNEL_DIR)/pid
+	@nohup cloudflared tunnel --no-autoupdate --url http://localhost:9880 \
+		--http-host-header api.kora.localhost > $(TUNNEL_DIR)/cloudflared.log 2>&1 & echo $$! > $(TUNNEL_DIR)/pid
 	@for i in $$(seq 30); do \
 		url=$$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' $(TUNNEL_DIR)/cloudflared.log | head -1); \
 		[ -n "$$url" ] && break; sleep 1; \
@@ -368,9 +376,9 @@ alert:
 	[ -n "$$path" ] || { echo "The sre example's alertmanager source is not ready. Run make example EXAMPLE=factories/sre."; exit 1; }; \
 	now=$$(date -u +%Y-%m-%dT%H:%M:%SZ); \
 	printf '%s' '{"version":"4","status":"$(STATUS)","receiver":"kora","groupKey":"{}:{alertname=\"KubePodCrashLooping\", namespace=\"shop\"}","truncatedAlerts":0,"groupLabels":{"alertname":"KubePodCrashLooping","namespace":"shop"},"commonLabels":{"alertname":"KubePodCrashLooping","namespace":"shop","deployment":"checkout","severity":"critical"},"commonAnnotations":{"summary":"checkout is crash-looping in shop","description":"A checkout pod in shop restarted more than three times in the last ten minutes."},"externalURL":"http://alertmanager.local","alerts":[{"status":"$(STATUS)","labels":{"alertname":"KubePodCrashLooping","namespace":"shop","deployment":"checkout","severity":"critical"},"annotations":{"summary":"checkout is crash-looping in shop"},"startsAt":"'"$$now"'","endsAt":"0001-01-01T00:00:00Z","generatorURL":"http://prometheus.local/graph","fingerprint":"5f1c0a6e2b7d9c31"}]}' | \
-	curl -sS --fail-with-body --resolve api.local.runkora.io:9443:127.0.0.1 --cacert "$$(mkcert -CAROOT)/rootCA.pem" \
+	curl -sS --fail-with-body \
 		-H "Authorization: Bearer $$(cat $(SECRETS)/oncall-alertmanager-webhook)" -H 'Content-Type: application/json' \
-		--data-binary @- "https://api.local.runkora.io:9443$$path" && echo && echo "Posted a $(STATUS) KubePodCrashLooping alert for shop/checkout."
+		--data-binary @- "http://api.kora.localhost:9880$$path" && echo && echo "Posted a $(STATUS) KubePodCrashLooping alert for shop/checkout."
 
 # Deletes the cluster. The next make up reuses the files in .secrets.
 down: tunnel-stop

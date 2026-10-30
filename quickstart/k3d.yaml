@@ -8,15 +8,12 @@ servers: 1
 agents: 2
 
 ports:
-  # The kora gateway. The console is https://local.runkora.io:9443.
-  - port: 9443:443
-    nodeFilters:
-      - loadbalancer
+  # The kora gateway. The console is http://kora.localhost:9880.
   - port: 9880:80
     nodeFilters:
       - loadbalancer
   # Dex, the sign-in provider. The browser and the identity service both use
-  # https://dex.local.runkora.io:5557/dex.
+  # http://dex.localhost:5557/dex.
   - port: 5557:5557
     nodeFilters:
       - loadbalancer
