@@ -22,7 +22,7 @@ The quickstart installs runkora on a local k3d cluster. It installs Istio, SPIRE
 ## Install kora
 
 1.  **Choose a model provider:** Set up OpenRouter or Ollama as described in [Choose a model provider](#choose-a-model-provider).
-2.  **Run the install:** Run `make up`. Expect the install to take several minutes.
+2.  **Run the install:** Run `make up`. Expect the install to take several minutes. `make up` makes `k3d-kora-quickstart` your current kubectl context.
 3.  **Choose an example:** At the end, `make up` asks which example to apply:
     *   **[`single-tenant`](../single-tenant):** One tenant with one agent that runs on the model provider alone.
     *   **[`multi-tenant`](../multi-tenant):** Two tenants, engineering and SRE, with four use cases. It also needs an Exa API key and a GitHub App.
@@ -156,7 +156,7 @@ Replace `issuerURL` and `clientID` in a tenant under the example's `platform/ten
 ## Check and remove the install
 
 *   `make status` lists the Helm releases, the tenants, the providers and models, every resource the examples declared, and every pod that is not running.
-*   `make down` deletes the cluster. The files in `.secrets/` stay for the next `make up`.
+*   `make down` deletes the cluster. The files in `.secrets/` stay for the next `make up`. It does not restore the kubectl context you had before the install. Switch back with `kubectl config use-context <name>`.
 *   `make clean` deletes the cluster and `.secrets/`, and keeps your `.env`.
 
 ## Next steps
